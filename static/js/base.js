@@ -48,6 +48,7 @@
             '.contact-card',
             '.map-info-card',
             '.faq-group',
+            '.event-item',
         ].join(', ');
 
         const targets = document.querySelectorAll(selector);

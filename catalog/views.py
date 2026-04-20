@@ -2,6 +2,190 @@
 from django.views.generic import TemplateView
 
 
+class EventsView(TemplateView):
+    """Страница каталога научных мероприятий.
+
+    Сейчас использует временные данные (placeholder) для отображения
+    макета. После подключения модели `Event` данные будут загружаться
+    из MySQL через `Event.objects.all()` с нужными фильтрами.
+    """
+
+    template_name = 'catalog/events.html'
+
+    def get_context_data(self, **kwargs):
+        """Передаёт в шаблон справочники фильтров и временный список событий."""
+        context = super().get_context_data(**kwargs)
+        context['directions'] = [
+            {'slug': 'all', 'label': 'Все направления'},
+            {'slug': 'economics', 'label': 'Экономика и финансы'},
+            {'slug': 'management', 'label': 'Менеджмент'},
+            {'slug': 'law', 'label': 'Юриспруденция'},
+            {'slug': 'it', 'label': 'Информационные технологии'},
+            {'slug': 'pedagogy', 'label': 'Педагогика и психология'},
+            {'slug': 'humanities', 'label': 'Гуманитарные науки'},
+        ]
+        context['types'] = [
+            {'slug': 'all', 'label': 'Все типы'},
+            {'slug': 'conference', 'label': 'Конференция'},
+            {'slug': 'seminar', 'label': 'Семинар'},
+            {'slug': 'round-table', 'label': 'Круглый стол'},
+            {'slug': 'workshop', 'label': 'Мастер-класс'},
+            {'slug': 'lecture', 'label': 'Лекция'},
+        ]
+        context['formats'] = [
+            {'slug': 'all', 'label': 'Любой формат'},
+            {'slug': 'offline', 'label': 'Очно'},
+            {'slug': 'online', 'label': 'Дистанционно'},
+            {'slug': 'hybrid', 'label': 'Гибридный'},
+        ]
+        context['sort_options'] = [
+            {'value': 'date', 'label': 'По дате (сначала ближайшие)'},
+            {'value': 'popularity', 'label': 'По популярности'},
+            {'value': 'name', 'label': 'По названию (А–Я)'},
+        ]
+        context['events'] = [
+            {
+                'id': 1,
+                'title': 'Международная конференция «Цифровая экономика и образование»',
+                'type': 'Конференция',
+                'type_slug': 'conference',
+                'direction': 'Экономика и финансы',
+                'direction_slug': 'economics',
+                'format': 'Очно',
+                'format_slug': 'offline',
+                'date_day': '24',
+                'date_month': 'апр',
+                'date_full': '24 апреля 2026',
+                'time': '10:00 — 18:00',
+                'location': 'Москва, МУИВ, ауд. 401',
+                'seats_total': 180,
+                'seats_taken': 129,
+                'description': (
+                    'Ежегодная научная конференция с участием представителей '
+                    'ведущих вузов, бизнеса и государственных структур.'
+                ),
+                'status': 'open',
+                'status_label': 'Регистрация открыта',
+            },
+            {
+                'id': 2,
+                'title': 'Методология научного исследования в современной педагогике',
+                'type': 'Семинар',
+                'type_slug': 'seminar',
+                'direction': 'Педагогика и психология',
+                'direction_slug': 'pedagogy',
+                'format': 'Дистанционно',
+                'format_slug': 'online',
+                'date_day': '12',
+                'date_month': 'май',
+                'date_full': '12 мая 2026',
+                'time': '14:00 — 17:00',
+                'location': 'Онлайн-трансляция',
+                'seats_total': 250,
+                'seats_taken': 87,
+                'description': (
+                    'Обзор актуальных методов и инструментов для подготовки '
+                    'магистерских и кандидатских исследований.'
+                ),
+                'status': 'open',
+                'status_label': 'Регистрация открыта',
+            },
+            {
+                'id': 3,
+                'title': 'Круглый стол «Право и цифровые технологии»',
+                'type': 'Круглый стол',
+                'type_slug': 'round-table',
+                'direction': 'Юриспруденция',
+                'direction_slug': 'law',
+                'format': 'Гибридный',
+                'format_slug': 'hybrid',
+                'date_day': '30',
+                'date_month': 'май',
+                'date_full': '30 мая 2026',
+                'time': '11:00 — 14:00',
+                'location': 'Москва, МУИВ, ауд. 215 / Онлайн',
+                'seats_total': 60,
+                'seats_taken': 43,
+                'description': (
+                    'Обсуждение правового регулирования ИИ, цифровых активов '
+                    'и персональных данных в России и за рубежом.'
+                ),
+                'status': 'open',
+                'status_label': 'Регистрация открыта',
+            },
+            {
+                'id': 4,
+                'title': 'Мастер-класс «Проектный менеджмент в ИТ»',
+                'type': 'Мастер-класс',
+                'type_slug': 'workshop',
+                'direction': 'Менеджмент',
+                'direction_slug': 'management',
+                'format': 'Очно',
+                'format_slug': 'offline',
+                'date_day': '05',
+                'date_month': 'июн',
+                'date_full': '5 июня 2026',
+                'time': '15:00 — 19:00',
+                'location': 'Москва, МУИВ, коворкинг',
+                'seats_total': 40,
+                'seats_taken': 40,
+                'description': (
+                    'Практикум от приглашённых экспертов отрасли: работа '
+                    'с бэклогом, оценка задач и управление рисками проекта.'
+                ),
+                'status': 'full',
+                'status_label': 'Мест нет',
+            },
+            {
+                'id': 5,
+                'title': 'Лекция «Искусственный интеллект в науке и образовании»',
+                'type': 'Лекция',
+                'type_slug': 'lecture',
+                'direction': 'Информационные технологии',
+                'direction_slug': 'it',
+                'format': 'Дистанционно',
+                'format_slug': 'online',
+                'date_day': '18',
+                'date_month': 'июн',
+                'date_full': '18 июня 2026',
+                'time': '16:00 — 17:30',
+                'location': 'Онлайн-трансляция',
+                'seats_total': 500,
+                'seats_taken': 112,
+                'description': (
+                    'Открытая лекция о применении нейросетей в научных '
+                    'исследованиях и учебном процессе.'
+                ),
+                'status': 'open',
+                'status_label': 'Регистрация открыта',
+            },
+            {
+                'id': 6,
+                'title': 'Семинар «Межкультурные коммуникации в XXI веке»',
+                'type': 'Семинар',
+                'type_slug': 'seminar',
+                'direction': 'Гуманитарные науки',
+                'direction_slug': 'humanities',
+                'format': 'Очно',
+                'format_slug': 'offline',
+                'date_day': '27',
+                'date_month': 'июн',
+                'date_full': '27 июня 2026',
+                'time': '12:00 — 15:00',
+                'location': 'Москва, МУИВ, ауд. 508',
+                'seats_total': 80,
+                'seats_taken': 22,
+                'description': (
+                    'Исследование современных коммуникационных стратегий '
+                    'в многоязычной и поликультурной среде.'
+                ),
+                'status': 'open',
+                'status_label': 'Регистрация открыта',
+            },
+        ]
+        return context
+
+
 class FaqView(TemplateView):
     """Страница «Часто задаваемые вопросы» с категориями и поиском."""
 
