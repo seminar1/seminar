@@ -45,6 +45,8 @@
             '.timeline__item',
             '.about-stats__item',
             '.about-mission__card',
+            '.contact-card',
+            '.map-info-card',
         ].join(', ');
 
         const targets = document.querySelectorAll(selector);

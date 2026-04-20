@@ -2,6 +2,59 @@
 from django.views.generic import TemplateView
 
 
+class ContactsView(TemplateView):
+    """Статичная страница «Контакты» с формой и картой."""
+
+    template_name = 'catalog/contacts.html'
+
+    def get_context_data(self, **kwargs):
+        """Передаёт в шаблон данные для контактных блоков."""
+        context = super().get_context_data(**kwargs)
+        context['contact_cards'] = [
+            {
+                'icon': 'bi-geo-alt',
+                'title': 'Адрес',
+                'lines': [
+                    'г. Москва, 115432',
+                    '2-й Кожуховский проезд, д. 12, стр. 1',
+                ],
+                'link_text': 'Посмотреть на карте',
+                'link_href': '#map',
+            },
+            {
+                'icon': 'bi-telephone',
+                'title': 'Телефоны',
+                'lines': [
+                    '+7 (495) 500-03-63 — приёмная',
+                    '+7 (495) 500-03-64 — научный центр',
+                ],
+                'link_text': 'Позвонить',
+                'link_href': 'tel:+74955000363',
+            },
+            {
+                'icon': 'bi-envelope',
+                'title': 'Электронная почта',
+                'lines': [
+                    'science@muiv.ru — общие вопросы',
+                    'events@muiv.ru — организаторам мероприятий',
+                ],
+                'link_text': 'Написать письмо',
+                'link_href': 'mailto:science@muiv.ru',
+            },
+            {
+                'icon': 'bi-clock',
+                'title': 'Часы работы',
+                'lines': [
+                    'Пн–Пт: 09:00 — 18:00',
+                    'Сб–Вс: выходные дни',
+                ],
+                'link_text': 'Написать в научный центр',
+                'link_href': 'mailto:science@muiv.ru',
+            },
+        ]
+        return context
+
+
 class AboutView(TemplateView):
     """Статичная страница «О нас» с описанием сервиса и команды."""
 

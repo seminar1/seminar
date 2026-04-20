@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Контакты — Научный Центр МУИВ им. С.Ю. Витте{% endblock %}
+
+{% block meta_description %}Контактная информация Научного Центра Московского университета имени С.Ю. Витте: адрес, телефоны, электронная почта, форма обратной связи и карта проезда.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/contacts.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="contacts-hero">
+    <div class="contacts-hero__backdrop" aria-hidden="true">
+        <span class="contacts-hero__blob contacts-hero__blob--1"></span>
+        <span class="contacts-hero__blob contacts-hero__blob--2"></span>
+    </div>
+    <div class="container contacts-hero__inner">
+        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+            <a href="{% url 'catalog:landing' %}">Главная</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Контакты</span>
+        </nav>
+        <span class="contacts-hero__eyebrow">
+            <i class="bi bi-geo-alt"></i>
+            Наши координаты
+        </span>
+        <h1 class="contacts-hero__title">
+            Контактная информация <span class="contacts-hero__title-accent">научного центра</span>
+        </h1>
+        <p class="contacts-hero__lead">
+            Адрес офиса, телефоны, электронная почта и карта проезда —
+            всё, что нужно, чтобы связаться с научным центром МУИВ им. С.Ю. Витте
+            или посетить его лично.
+        </p>
+    </div>
+</section>
+
+<section class="contacts-cards">
+    <div class="container">
+        <div class="contacts-cards__grid">
+            {% for card in contact_cards %}
+            <article class="contact-card">
+                <span class="contact-card__icon" aria-hidden="true">
+                    <i class="bi {{ card.icon }}"></i>
+                </span>
+                <h3 class="contact-card__title">{{ card.title }}</h3>
+                <ul class="contact-card__lines">
+                    {% for line in card.lines %}
+                    <li>{{ line }}</li>
+                    {% endfor %}
+                </ul>
+                <a href="{{ card.link_href }}" class="contact-card__link">
+                    {{ card.link_text }} <i class="bi bi-arrow-right"></i>
+                </a>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="contacts-map" id="map">
+    <div class="container">
+        <header class="section__header section__header--row">
+            <div>
+                <span class="section__eyebrow">Как нас найти</span>
+                <h2 class="section__title">Москва, 2-й Кожуховский проезд, 12с1</h2>
+            </div>
+            <a href="https://www.google.com/maps/dir//2-y+Kozhukhovskiy+Proyezd,+Moskva,+Russia" target="_blank" rel="noopener" class="btn btn--outline btn--icon">
+                <i class="bi bi-sign-turn-right"></i>
+                Построить маршрут
+            </a>
+        </header>
+
+        <div class="contacts-map__frame">
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15120.641118896838!2d37.65627018573483!3d55.71164274250781!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x414ab4caf9faf987%3A0xbfd80e63b2dea40f!2s2-Y%20Kozhukhovskiy%20Proyezd%2C%20Moskva%2C%20Russia!5e0!3m2!1sen!2saz!4v1764412880585!5m2!1sen!2saz"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                class="google-map"
+                title="Карта — Научный Центр МУИВ"></iframe>
+        </div>
+
+        <div class="contacts-map__info">
+            <article class="map-info-card">
+                <span class="map-info-card__icon"><i class="bi bi-train-front"></i></span>
+                <div>
+                    <h4>Метро</h4>
+                    <p>«Кожуховская» — 8 минут пешком, «Дубровка» — 12 минут.</p>
+                </div>
+            </article>
+            <article class="map-info-card">
+                <span class="map-info-card__icon"><i class="bi bi-car-front"></i></span>
+                <div>
+                    <h4>Автомобиль</h4>
+                    <p>Парковка для гостей университета на территории кампуса.</p>
+                </div>
+            </article>
+            <article class="map-info-card">
+                <span class="map-info-card__icon"><i class="bi bi-bus-front"></i></span>
+                <div>
+                    <h4>Общественный транспорт</h4>
+                    <p>Автобусы №156, 670 — остановка «2-й Кожуховский проезд».</p>
+                </div>
+            </article>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
