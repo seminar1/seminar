@@ -109,16 +109,16 @@
             {% for event in events %}
             <article
                 class="event-item"
-                data-direction="{{ event.direction_slug }}"
-                data-type="{{ event.type_slug }}"
-                data-format="{{ event.format_slug }}"
-                data-haystack="{{ event.title|lower }} {{ event.description|lower }} {{ event.location|lower }}">
+                data-direction="{{ event.direction.slug }}"
+                data-type="{{ event.event_type.slug }}"
+                data-format="{{ event.event_format }}"
+                data-haystack="{{ event.title|lower }} {{ event.short_description|lower }} {{ event.description|lower }} {{ event.location|lower }}">
                 <div class="event-item__media">
                     <div class="event-item__date">
                         <span class="event-item__day">{{ event.date_day }}</span>
-                        <span class="event-item__month">{{ event.date_month }}</span>
+                        <span class="event-item__month">{{ event.date_month_short }}</span>
                     </div>
-                    <span class="event-item__badge event-item__badge--{{ event.status }}">
+                    <span class="event-item__badge event-item__badge--{{ event.status_slug }}">
                         <i class="bi bi-circle-fill"></i>
                         {{ event.status_label }}
                     </span>
@@ -126,19 +126,24 @@
 
                 <div class="event-item__body">
                     <div class="event-item__tags">
-                        <span class="event-item__tag event-item__tag--type">{{ event.type }}</span>
-                        <span class="event-item__tag event-item__tag--format">{{ event.format }}</span>
+                        <span class="event-item__tag event-item__tag--type">{{ event.event_type.title }}</span>
+                        <span class="event-item__tag event-item__tag--format">{{ event.get_event_format_display }}</span>
                     </div>
                     <h3 class="event-item__title">{{ event.title }}</h3>
-                    <p class="event-item__description">{{ event.description }}</p>
+                    {% if event.short_description or event.description %}
+                    <p class="event-item__description">{{ event.short_description|default:event.description|truncatewords:28 }}</p>
+                    {% endif %}
 
                     <ul class="event-item__meta">
                         <li><i class="bi bi-calendar3"></i> {{ event.date_full }}</li>
-                        <li><i class="bi bi-clock"></i> {{ event.time }}</li>
+                        <li><i class="bi bi-clock"></i> {{ event.time_range }}</li>
+                        {% if event.location %}
                         <li><i class="bi bi-geo-alt"></i> {{ event.location }}</li>
-                        <li><i class="bi bi-bookmark"></i> {{ event.direction }}</li>
+                        {% endif %}
+                        <li><i class="bi bi-bookmark"></i> {{ event.direction.title }}</li>
                     </ul>
 
+                    {% if event.seats_total > 0 %}
                     <div class="event-item__seats">
                         <div class="event-item__seats-info">
                             <span>Мест занято</span>
@@ -151,9 +156,10 @@
                                 data-total="{{ event.seats_total }}"></span>
                         </div>
                     </div>
+                    {% endif %}
 
                     <div class="event-item__actions">
-                        {% if event.status == 'full' %}
+                        {% if event.is_full %}
                         <button type="button" class="btn btn--ghost" disabled>
                             <i class="bi bi-hourglass"></i>
                             В лист ожидания
@@ -192,18 +198,11 @@
             </button>
         </div>
 
+        {% if events %}
         <nav class="events-pagination" aria-label="Страницы каталога">
-            <a href="#" class="events-pagination__link is-disabled" aria-disabled="true">
-                <i class="bi bi-chevron-left"></i>
-            </a>
             <a href="#" class="events-pagination__link is-active" aria-current="page">1</a>
-            <a href="#" class="events-pagination__link">2</a>
-            <a href="#" class="events-pagination__link">3</a>
-            <span class="events-pagination__dots">…</span>
-            <a href="#" class="events-pagination__link">
-                <i class="bi bi-chevron-right"></i>
-            </a>
         </nav>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

@@ -15,6 +15,14 @@
     const filterSelects = form.querySelectorAll('select[data-filter]');
     const items = Array.from(grid.querySelectorAll('.event-item'));
 
+    if (items.length === 0) {
+        if (countEl) countEl.textContent = '0';
+        form.querySelectorAll('input, select, button').forEach((el) => {
+            el.disabled = true;
+        });
+        return;
+    }
+
     const filterLabels = {};
     filterSelects.forEach((select) => {
         const key = select.dataset.filter;

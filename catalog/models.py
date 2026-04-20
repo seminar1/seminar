@@ -8,6 +8,15 @@ from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 
+RU_MONTHS_SHORT = [
+    'янв', 'фев', 'мар', 'апр', 'май', 'июн',
+    'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
+]
+RU_MONTHS_GENITIVE = [
+    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
+]
+
 
 class Direction(models.Model):
     """Научное направление мероприятия (справочник)."""
@@ -212,6 +221,59 @@ class Event(models.Model):
     def is_registration_open(self):
         """Доступна ли регистрация на мероприятие."""
         return self.status == self.Status.PUBLISHED and not self.is_full
+
+    @property
+    def date_day(self):
+        """День начала мероприятия в формате «24»."""
+        return f'{self.starts_at.day:02d}'
+
+    @property
+    def date_month_short(self):
+        """Сокращённое название месяца начала на русском («апр»)."""
+        return RU_MONTHS_SHORT[self.starts_at.month - 1]
+
+    @property
+    def date_full(self):
+        """Полная дата начала на русском («24 апреля 2026»)."""
+        month = RU_MONTHS_GENITIVE[self.starts_at.month - 1]
+        return f'{self.starts_at.day} {month} {self.starts_at.year}'
+
+    @property
+    def time_range(self):
+        """Время проведения: «10:00 — 18:00» или «10:00», если нет окончания."""
+        start = self.starts_at.strftime('%H:%M')
+        if not self.ends_at:
+            return start
+        return f'{start} — {self.ends_at.strftime("%H:%M")}'
+
+    @property
+    def status_slug(self):
+        """Короткий статус для визуального оформления карточки."""
+        if self.is_full:
+            return 'full'
+        if self.is_registration_open:
+            return 'open'
+        return 'closed'
+
+    @property
+    def status_label(self):
+        """Текстовый статус карточки для отображения пользователю."""
+        if self.is_full:
+            return 'Мест нет'
+        if self.is_registration_open:
+            return 'Регистрация открыта'
+        if self.status == self.Status.CANCELLED:
+            return 'Отменено'
+        if self.status == self.Status.COMPLETED:
+            return 'Завершено'
+        return 'Скоро'
+
+    @property
+    def seats_percent(self):
+        """Процент заполненности мест (0–100). 0, если без ограничения."""
+        if self.seats_total == 0:
+            return 0
+        return min(int(round(self.seats_taken * 100 / self.seats_total)), 100)
 
 
 class EventRegistration(models.Model):

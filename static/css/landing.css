@@ -60,6 +60,17 @@
     align-items: center;
 }
 
+.hero__inner--single {
+    grid-template-columns: minmax(0, 820px);
+    justify-content: center;
+    text-align: center;
+}
+
+.hero__inner--single .hero__actions,
+.hero__inner--single .hero__stats {
+    justify-content: center;
+}
+
 .hero__badge {
     display: inline-flex;
     align-items: center;
