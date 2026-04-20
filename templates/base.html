@@ -30,12 +30,11 @@
 
             <nav class="site-nav" id="siteNav" aria-label="Основная навигация">
                 <ul class="site-nav__list">
-                    <li><a class="site-nav__link" href="#about">О проекте</a></li>
-                    <li><a class="site-nav__link" href="#features">Возможности</a></li>
-                    <li><a class="site-nav__link" href="#directions">Направления</a></li>
-                    <li><a class="site-nav__link" href="#process">Как это работает</a></li>
-                    <li><a class="site-nav__link" href="#events">Мероприятия</a></li>
-                    <li><a class="site-nav__link" href="#contacts">Контакты</a></li>
+                    <li><a class="site-nav__link" href="{% url 'catalog:landing' %}#features">Возможности</a></li>
+                    <li><a class="site-nav__link" href="{% url 'catalog:landing' %}#directions">Направления</a></li>
+                    <li><a class="site-nav__link" href="{% url 'catalog:landing' %}#events">Мероприятия</a></li>
+                    <li><a class="site-nav__link" href="{% url 'catalog:about' %}">О нас</a></li>
+                    <li><a class="site-nav__link" href="{% url 'catalog:landing' %}#contacts">Контакты</a></li>
                 </ul>
             </nav>
 
@@ -80,10 +79,10 @@
             <div class="site-footer__col">
                 <h4 class="site-footer__heading">Навигация</h4>
                 <ul class="site-footer__list">
-                    <li><a href="#about">О проекте</a></li>
-                    <li><a href="#features">Возможности</a></li>
-                    <li><a href="#process">Как это работает</a></li>
-                    <li><a href="#events">Мероприятия</a></li>
+                    <li><a href="{% url 'catalog:landing' %}#features">Возможности</a></li>
+                    <li><a href="{% url 'catalog:landing' %}#directions">Направления</a></li>
+                    <li><a href="{% url 'catalog:landing' %}#events">Мероприятия</a></li>
+                    <li><a href="{% url 'catalog:about' %}">О нас</a></li>
                 </ul>
             </div>
 

@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}О нас — Научный Центр МУИВ им. С.Ю. Витте{% endblock %}
+
+{% block meta_description %}О сервисе «Научный Центр» Московского университета имени С.Ю. Витте: миссия, команда, ценности и история развития платформы научных мероприятий.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/about.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="about-hero">
+    <div class="about-hero__backdrop" aria-hidden="true">
+        <span class="about-hero__blob about-hero__blob--1"></span>
+        <span class="about-hero__blob about-hero__blob--2"></span>
+    </div>
+    <div class="container about-hero__inner">
+        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+            <a href="{% url 'catalog:landing' %}">Главная</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>О нас</span>
+        </nav>
+        <span class="about-hero__eyebrow">
+            <i class="bi bi-building"></i>
+            МУИВ им. С.Ю. Витте
+        </span>
+        <h1 class="about-hero__title">
+            Цифровая среда <span class="about-hero__title-accent">научной жизни</span>
+            университета
+        </h1>
+        <p class="about-hero__lead">
+            «Научный Центр» — это электронный каталог научных мероприятий
+            Московского университета имени С.Ю. Витте. Мы объединяем
+            исследователей, преподавателей и студентов на единой цифровой
+            платформе с удобной регистрацией, личными кабинетами и полным
+            циклом управления событиями.
+        </p>
+    </div>
+</section>
+
+<section class="about-mission">
+    <div class="container about-mission__grid">
+        <div class="about-mission__content">
+            <span class="section__eyebrow">Наша миссия</span>
+            <h2 class="section__title">Помогать науке звучать громче</h2>
+            <p class="about-mission__text">
+                Мы создаём современный инструмент, который делает научные
+                мероприятия университета видимыми, понятными и доступными.
+                Ни одна конференция, семинар или круглый стол не должны
+                оставаться в тени — каждая инициатива заслуживает качественной
+                цифровой витрины и удобного механизма регистрации участников.
+            </p>
+            <p class="about-mission__text">
+                Наша цель — превратить участие в научных событиях из
+                бюрократической процедуры в простой и понятный путь:
+                от поиска мероприятия по интересам до получения сертификата
+                участника в личном кабинете.
+            </p>
+            <a href="{% url 'catalog:landing' %}#events" class="btn btn--primary btn--lg">
+                <i class="bi bi-calendar2-event"></i>
+                Смотреть мероприятия
+            </a>
+        </div>
+
+        <aside class="about-mission__card">
+            <h3 class="about-mission__card-title">
+                <i class="bi bi-bullseye"></i>
+                Ключевые задачи сервиса
+            </h3>
+            <ul class="about-mission__list">
+                <li>
+                    <i class="bi bi-check2-circle"></i>
+                    Единая витрина всех научных мероприятий МУИВ
+                </li>
+                <li>
+                    <i class="bi bi-check2-circle"></i>
+                    Онлайн-регистрация участников без бумажных заявлений
+                </li>
+                <li>
+                    <i class="bi bi-check2-circle"></i>
+                    Персональные кабинеты с историей участия
+                </li>
+                <li>
+                    <i class="bi bi-check2-circle"></i>
+                    Удобные инструменты создания и редактирования событий
+                </li>
+                <li>
+                    <i class="bi bi-check2-circle"></i>
+                    Прозрачная аналитика для администрации университета
+                </li>
+            </ul>
+        </aside>
+    </div>
+</section>
+
+<section class="about-stats">
+    <div class="container">
+        <div class="about-stats__grid">
+            {% for stat in stats %}
+            <div class="about-stats__item">
+                <div class="about-stats__value">{{ stat.value }}</div>
+                <div class="about-stats__label">{{ stat.label }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="about-values">
+    <div class="container">
+        <header class="section__header">
+            <span class="section__eyebrow">Наши ценности</span>
+            <h2 class="section__title">Принципы, которыми мы руководствуемся</h2>
+            <p class="section__lead">
+                Эти ценности лежат в основе каждого решения — от дизайна
+                интерфейсов до политики модерации.
+            </p>
+        </header>
+
+        <div class="about-values__grid">
+            {% for value in values %}
+            <article class="value-card">
+                <span class="value-card__icon" aria-hidden="true">
+                    <i class="bi {{ value.icon }}"></i>
+                </span>
+                <h3 class="value-card__title">{{ value.title }}</h3>
+                <p class="value-card__text">{{ value.text }}</p>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="about-timeline">
+    <div class="container">
+        <header class="section__header">
+            <span class="section__eyebrow">История проекта</span>
+            <h2 class="section__title">Путь от идеи до платформы</h2>
+        </header>
+
+        <ol class="timeline">
+            {% for step in timeline %}
+            <li class="timeline__item">
+                <span class="timeline__year">{{ step.year }}</span>
+                <div class="timeline__body">
+                    <h3 class="timeline__title">{{ step.title }}</h3>
+                    <p class="timeline__text">{{ step.text }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
+<section class="about-team">
+    <div class="container">
+        <header class="section__header">
+            <span class="section__eyebrow">Команда</span>
+            <h2 class="section__title">Люди, которые делают «Научный Центр»</h2>
+            <p class="section__lead">
+                Небольшая, но сплочённая команда преподавателей, разработчиков
+                и дизайнеров.
+            </p>
+        </header>
+
+        <div class="about-team__grid">
+            {% for member in team %}
+            <article class="team-card">
+                <span class="team-card__avatar" aria-hidden="true">{{ member.initials }}</span>
+                <h3 class="team-card__name">{{ member.name }}</h3>
+                <span class="team-card__role">{{ member.role }}</span>
+                <p class="team-card__description">{{ member.description }}</p>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="about-cta">
+    <div class="container about-cta__inner">
+        <div class="about-cta__content">
+            <h2 class="about-cta__title">Станьте частью научного сообщества МУИВ</h2>
+            <p class="about-cta__text">
+                Создайте аккаунт и получите доступ ко всем возможностям
+                электронного каталога научных мероприятий университета.
+            </p>
+        </div>
+        <div class="about-cta__actions">
+            <a href="#" class="btn btn--primary btn--lg">
+                <i class="bi bi-person-plus"></i>
+                Зарегистрироваться
+            </a>
+            <a href="{% url 'catalog:landing' %}#contacts" class="btn btn--outline btn--lg">
+                <i class="bi bi-chat-dots"></i>
+                Связаться с нами
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

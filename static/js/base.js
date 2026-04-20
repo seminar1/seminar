@@ -32,6 +32,43 @@
         }
     }
 
+    function initReveal() {
+        const selector = [
+            '.feature-card',
+            '.direction-card',
+            '.process-step',
+            '.event-card',
+            '.hero__stat',
+            '.hero-card',
+            '.value-card',
+            '.team-card',
+            '.timeline__item',
+            '.about-stats__item',
+            '.about-mission__card',
+        ].join(', ');
+
+        const targets = document.querySelectorAll(selector);
+        if (!targets.length) return;
+
+        targets.forEach((el) => el.classList.add('reveal'));
+
+        if (!('IntersectionObserver' in window)) {
+            targets.forEach((el) => el.classList.add('is-visible'));
+            return;
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+        targets.forEach((el) => observer.observe(el));
+    }
+
     function initSmoothScroll() {
         document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
             anchor.addEventListener('click', (event) => {
@@ -51,6 +88,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         handleScroll();
         initSmoothScroll();
+        initReveal();
         if (burger) {
             burger.addEventListener('click', toggleNav);
         }
