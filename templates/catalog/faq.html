@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Вопросы и ответы — Научный Центр МУИВ им. С.Ю. Витте{% endblock %}
+
+{% block meta_description %}Часто задаваемые вопросы о работе электронного каталога научных мероприятий МУИВ им. С.Ю. Витте: регистрация, участие в событиях, сертификаты и техническая поддержка.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/faq.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="faq-hero">
+    <div class="faq-hero__backdrop" aria-hidden="true">
+        <span class="faq-hero__blob faq-hero__blob--1"></span>
+        <span class="faq-hero__blob faq-hero__blob--2"></span>
+    </div>
+    <div class="container faq-hero__inner">
+        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+            <a href="{% url 'catalog:landing' %}">Главная</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Вопросы и ответы</span>
+        </nav>
+        <span class="faq-hero__eyebrow">
+            <i class="bi bi-patch-question"></i>
+            База знаний
+        </span>
+        <h1 class="faq-hero__title">
+            Ответы на <span class="faq-hero__title-accent">частые вопросы</span>
+        </h1>
+        <p class="faq-hero__lead">
+            Мы собрали всё самое важное о работе электронного каталога:
+            от регистрации до получения сертификата. Не нашли ответа —
+            напишите нам, и мы обязательно поможем.
+        </p>
+
+        <div class="faq-search" role="search">
+            <i class="bi bi-search faq-search__icon" aria-hidden="true"></i>
+            <input
+                type="search"
+                id="faqSearch"
+                class="faq-search__input"
+                placeholder="Поиск по вопросам…"
+                autocomplete="off"
+                aria-label="Поиск по вопросам">
+            <button type="button" class="faq-search__clear" id="faqSearchClear" aria-label="Очистить поиск" hidden>
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+<section class="faq-body">
+    <div class="container faq-body__grid">
+        <aside class="faq-sidebar" aria-label="Категории вопросов">
+            <h2 class="faq-sidebar__title">Категории</h2>
+            <ul class="faq-sidebar__list">
+                <li>
+                    <button type="button" class="faq-filter is-active" data-filter="all">
+                        <i class="bi bi-grid"></i>
+                        <span>Все вопросы</span>
+                        <span class="faq-filter__count" data-total></span>
+                    </button>
+                </li>
+                {% for category in categories %}
+                <li>
+                    <button type="button" class="faq-filter" data-filter="{{ category.slug }}">
+                        <i class="bi {{ category.icon }}"></i>
+                        <span>{{ category.title }}</span>
+                        <span class="faq-filter__count">{{ category.items|length }}</span>
+                    </button>
+                </li>
+                {% endfor %}
+            </ul>
+        </aside>
+
+        <div class="faq-content">
+            {% for category in categories %}
+            <section class="faq-group" data-category="{{ category.slug }}">
+                <header class="faq-group__header">
+                    <span class="faq-group__icon" aria-hidden="true">
+                        <i class="bi {{ category.icon }}"></i>
+                    </span>
+                    <div>
+                        <h2 class="faq-group__title">{{ category.title }}</h2>
+                        <p class="faq-group__count">{{ category.items|length }} вопрос{{ category.items|length|pluralize:",а,ов" }}</p>
+                    </div>
+                </header>
+
+                <div class="faq-list">
+                    {% for item in category.items %}
+                    <details class="faq-item" data-question="{{ item.question|lower }} {{ item.answer|lower }}">
+                        <summary class="faq-item__question">
+                            <span>{{ item.question }}</span>
+                            <span class="faq-item__icon" aria-hidden="true">
+                                <i class="bi bi-plus-lg"></i>
+                            </span>
+                        </summary>
+                        <div class="faq-item__answer">
+                            <p>{{ item.answer }}</p>
+                        </div>
+                    </details>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endfor %}
+
+            <div class="faq-empty" id="faqEmpty" hidden>
+                <i class="bi bi-search"></i>
+                <h3>Ничего не нашлось</h3>
+                <p>Попробуйте другие ключевые слова или выберите категорию из списка слева.</p>
+                <button type="button" class="btn btn--outline" id="faqEmptyReset">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    Сбросить поиск
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="faq-cta">
+    <div class="container faq-cta__inner">
+        <div class="faq-cta__content">
+            <span class="faq-cta__eyebrow">
+                <i class="bi bi-chat-heart"></i>
+                Не нашли ответ?
+            </span>
+            <h2 class="faq-cta__title">Мы поможем лично</h2>
+            <p class="faq-cta__text">
+                Напишите нам — ответим в течение одного рабочего дня и
+                добавим ваш вопрос в базу знаний, если он окажется полезен
+                другим пользователям.
+            </p>
+        </div>
+        <div class="faq-cta__actions">
+            <a href="{% url 'catalog:contacts' %}" class="btn btn--primary btn--lg">
+                <i class="bi bi-envelope"></i>
+                Перейти к контактам
+            </a>
+            <a href="mailto:support@muiv.ru" class="btn btn--outline btn--lg">
+                <i class="bi bi-headset"></i>
+                Техподдержка
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/faq.js' %}"></script>
+{% endblock %}

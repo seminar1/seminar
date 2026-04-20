@@ -47,6 +47,7 @@
             '.about-mission__card',
             '.contact-card',
             '.map-info-card',
+            '.faq-group',
         ].join(', ');
 
         const targets = document.querySelectorAll(selector);
