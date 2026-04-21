@@ -20,19 +20,15 @@ class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 
 
 class CuratorRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
-    """Разрешает доступ кураторам и администраторам.
+    """Разрешает доступ только пользователям с ролью куратора.
 
-    Администратор по умолчанию обладает полными правами, поэтому ему
-    также доступна кураторская панель управления. Обычные пользователи
-    получают 403.
+    Администраторы управляют системой через свою собственную панель
+    и не имеют доступа к кураторскому разделу.
     """
 
     raise_exception = True
 
     def test_func(self):
-        """Проверяет, что пользователь — куратор или администратор."""
+        """Проверяет, что пользователь — куратор."""
         user = self.request.user
-        return (
-            user.is_authenticated
-            and (user.is_curator or user.is_administrator)
-        )
+        return user.is_authenticated and user.is_curator
