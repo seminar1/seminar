@@ -65,6 +65,14 @@ class RegisterForm(StyledFormMixin, UserCreationForm):
             'username': forms.TextInput(attrs={'placeholder': 'Логин'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].help_text = ''
+        self.fields['password1'].help_text = (
+            'Минимум 8 символов, не только цифры.'
+        )
+        self.fields['password2'].help_text = ''
+
     def clean_email(self):
         """Проверяет уникальность e-mail среди зарегистрированных."""
         email = self.cleaned_data.get('email', '').strip().lower()
