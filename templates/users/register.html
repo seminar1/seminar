@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Регистрация — Научный Центр МУИВ им. С.Ю. Витте{% endblock %}
+
+{% block meta_description %}Создайте аккаунт в электронном каталоге научных мероприятий МУИВ им. С.Ю. Витте и регистрируйтесь на конференции онлайн.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-page auth-page--register">
+    <div class="auth-page__backdrop" aria-hidden="true">
+        <span class="auth-page__blob auth-page__blob--1"></span>
+        <span class="auth-page__blob auth-page__blob--2"></span>
+    </div>
+
+    <div class="container auth-page__inner">
+        <aside class="auth-aside">
+            <span class="auth-aside__eyebrow">
+                <i class="bi bi-person-plus"></i>
+                Создание аккаунта
+            </span>
+            <h1 class="auth-aside__title">
+                Присоединяйтесь к <span class="auth-aside__accent">научному сообществу</span>
+                МУИВ
+            </h1>
+            <p class="auth-aside__lead">
+                Заполните короткую анкету — и получите доступ к каталогу
+                мероприятий, онлайн-регистрации и личному кабинету с историей
+                участия.
+            </p>
+            <ul class="auth-aside__list">
+                <li><i class="bi bi-shield-check"></i> Ваши данные защищены и используются только для участия в событиях</li>
+                <li><i class="bi bi-lightning-charge"></i> Регистрация занимает меньше минуты</li>
+                <li><i class="bi bi-award"></i> Сертификаты и справки хранятся в личном кабинете</li>
+            </ul>
+        </aside>
+
+        <div class="auth-card auth-card--wide">
+            <header class="auth-card__header">
+                <span class="auth-card__eyebrow">Регистрация</span>
+                <h2 class="auth-card__title">Создайте аккаунт</h2>
+                <p class="auth-card__lead">
+                    После регистрации вам автоматически присваивается роль
+                    <strong>обычного пользователя</strong>.
+                </p>
+            </header>
+
+            {% if form.non_field_errors %}
+                <div class="auth-alert auth-alert--error">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <div>
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="post" class="auth-form" novalidate>
+                {% csrf_token %}
+
+                <div class="auth-form__grid">
+                    <div class="auth-form__field">
+                        <label for="{{ form.last_name.id_for_label }}" class="auth-form__label">
+                            {{ form.last_name.label }}
+                        </label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <div class="auth-form__error">
+                                {% for error in form.last_name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="auth-form__field">
+                        <label for="{{ form.first_name.id_for_label }}" class="auth-form__label">
+                            {{ form.first_name.label }}
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <div class="auth-form__error">
+                                {% for error in form.first_name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="auth-form__field">
+                    <label for="{{ form.username.id_for_label }}" class="auth-form__label">
+                        {{ form.username.label }}
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.help_text %}
+                        <div class="auth-form__hint">{{ form.username.help_text|safe }}</div>
+                    {% endif %}
+                    {% if form.username.errors %}
+                        <div class="auth-form__error">
+                            {% for error in form.username.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-form__field">
+                    <label for="{{ form.email.id_for_label }}" class="auth-form__label">
+                        {{ form.email.label }}
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="auth-form__error">
+                            {% for error in form.email.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-form__grid">
+                    <div class="auth-form__field">
+                        <label for="{{ form.password1.id_for_label }}" class="auth-form__label">
+                            {{ form.password1.label }}
+                        </label>
+                        {{ form.password1 }}
+                        {% if form.password1.help_text %}
+                            <div class="auth-form__hint">{{ form.password1.help_text|safe }}</div>
+                        {% endif %}
+                        {% if form.password1.errors %}
+                            <div class="auth-form__error">
+                                {% for error in form.password1.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="auth-form__field">
+                        <label for="{{ form.password2.id_for_label }}" class="auth-form__label">
+                            {{ form.password2.label }}
+                        </label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                            <div class="auth-form__error">
+                                {% for error in form.password2.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn--primary btn--lg auth-form__submit">
+                    <i class="bi bi-person-plus-fill"></i>
+                    Создать аккаунт
+                </button>
+            </form>
+
+            <footer class="auth-card__footer">
+                <span>Уже есть аккаунт?</span>
+                <a href="{% url 'users:login' %}" class="auth-card__link">
+                    Войти
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </footer>
+        </div>
+    </div>
+</section>
+{% endblock %}

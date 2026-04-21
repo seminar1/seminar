@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Вход — Научный Центр МУИВ им. С.Ю. Витте{% endblock %}
+
+{% block meta_description %}Вход в личный кабинет электронного каталога научных мероприятий МУИВ им. С.Ю. Витте.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-page__backdrop" aria-hidden="true">
+        <span class="auth-page__blob auth-page__blob--1"></span>
+        <span class="auth-page__blob auth-page__blob--2"></span>
+    </div>
+
+    <div class="container auth-page__inner">
+        <aside class="auth-aside">
+            <span class="auth-aside__eyebrow">
+                <i class="bi bi-mortarboard-fill"></i>
+                Научный Центр МУИВ
+            </span>
+            <h1 class="auth-aside__title">
+                Ваш путь в научную <span class="auth-aside__accent">жизнь университета</span>
+            </h1>
+            <p class="auth-aside__lead">
+                Войдите в личный кабинет, чтобы регистрироваться на конференции,
+                семинары и круглые столы, а также следить за своими заявками
+                и сертификатами.
+            </p>
+            <ul class="auth-aside__list">
+                <li><i class="bi bi-check2-circle"></i> Регистрация на мероприятия в один клик</li>
+                <li><i class="bi bi-check2-circle"></i> История участия и сертификаты</li>
+                <li><i class="bi bi-check2-circle"></i> Персональные рекомендации событий</li>
+            </ul>
+        </aside>
+
+        <div class="auth-card">
+            <header class="auth-card__header">
+                <span class="auth-card__eyebrow">Добро пожаловать</span>
+                <h2 class="auth-card__title">Вход в аккаунт</h2>
+                <p class="auth-card__lead">
+                    Введите логин и пароль, чтобы продолжить работу в каталоге.
+                </p>
+            </header>
+
+            {% if messages %}
+                <div class="auth-messages">
+                    {% for message in messages %}
+                        <div class="auth-alert auth-alert--{{ message.tags|default:'info' }}">
+                            <i class="bi bi-info-circle"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if form.non_field_errors %}
+                <div class="auth-alert auth-alert--error">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <div>
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="post" class="auth-form" novalidate>
+                {% csrf_token %}
+                {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+                <div class="auth-form__field">
+                    <label for="{{ form.username.id_for_label }}" class="auth-form__label">
+                        {{ form.username.label }}
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <div class="auth-form__error">
+                            {% for error in form.username.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-form__field">
+                    <label for="{{ form.password.id_for_label }}" class="auth-form__label">
+                        {{ form.password.label }}
+                    </label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                        <div class="auth-form__error">
+                            {% for error in form.password.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn--primary btn--lg auth-form__submit">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Войти
+                </button>
+            </form>
+
+            <footer class="auth-card__footer">
+                <span>Ещё нет аккаунта?</span>
+                <a href="{% url 'users:register' %}" class="auth-card__link">
+                    Зарегистрироваться
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </footer>
+        </div>
+    </div>
+</section>
+{% endblock %}

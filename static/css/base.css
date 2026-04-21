@@ -309,6 +309,17 @@ ul {
     transform: translateY(-7px) rotate(-45deg);
 }
 
+.logout-form {
+    display: inline-flex;
+    margin: 0;
+}
+
+.logout-form__button {
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+}
+
 
 .site-footer {
     background: var(--color-dark);
