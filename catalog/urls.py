@@ -1,6 +1,7 @@
 """URL-маршруты приложения catalog."""
-from django.urls import path
+from django.urls import path, register_converter
 
+from catalog.converters import UnicodeSlugConverter
 from catalog.views import (
     AboutView,
     ContactsView,
@@ -12,13 +13,15 @@ from catalog.views import (
     LandingView,
 )
 
+register_converter(UnicodeSlugConverter, 'uslug')
+
 app_name = 'catalog'
 
 urlpatterns = [
     path('', LandingView.as_view(), name='landing'),
     path('events/', EventsView.as_view(), name='events'),
     path(
-        'events/<slug:slug>/',
+        'events/<uslug:slug>/',
         EventDetailView.as_view(),
         name='event_detail',
     ),
