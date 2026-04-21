@@ -1,7 +1,70 @@
-"""Формы приложения catalog: управление мероприятиями."""
+"""Формы приложения catalog: управление мероприятиями и справочниками."""
 from django import forms
 
 from catalog.models import Direction, Event, EventType
+
+
+class DirectionForm(forms.ModelForm):
+    """Форма создания и редактирования научного направления."""
+
+    default_css_class = 'curator-form__input'
+
+    class Meta:
+        model = Direction
+        fields = ('title', 'icon', 'description', 'is_active')
+        widgets = {
+            'title': forms.TextInput(
+                attrs={'placeholder': 'Например, «Информационные технологии»'}
+            ),
+            'icon': forms.TextInput(
+                attrs={'placeholder': 'bi-cpu'}
+            ),
+            'description': forms.Textarea(
+                attrs={'rows': 3, 'placeholder': 'Краткое описание направления'}
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            if name == 'is_active':
+                field.widget.attrs.setdefault('class', 'curator-form__checkbox')
+                continue
+            widget = field.widget
+            existing = widget.attrs.get('class', '')
+            widget.attrs['class'] = (
+                f'{existing} {self.default_css_class}'.strip()
+            )
+
+
+class EventTypeForm(forms.ModelForm):
+    """Форма создания и редактирования типа мероприятия."""
+
+    default_css_class = 'curator-form__input'
+
+    class Meta:
+        model = EventType
+        fields = ('title', 'icon', 'is_active')
+        widgets = {
+            'title': forms.TextInput(
+                attrs={'placeholder': 'Например, «Конференция»'}
+            ),
+            'icon': forms.TextInput(
+                attrs={'placeholder': 'bi-people'}
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            if name == 'is_active':
+                field.widget.attrs.setdefault('class', 'curator-form__checkbox')
+                continue
+            widget = field.widget
+            existing = widget.attrs.get('class', '')
+            widget.attrs['class'] = (
+                f'{existing} {self.default_css_class}'.strip()
+            )
 
 
 class EventForm(forms.ModelForm):

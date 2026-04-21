@@ -1,11 +1,14 @@
 """Представления приложения catalog."""
 from django.contrib import messages
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView, TemplateView
+from django.db.models import Count, ProtectedError
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse, reverse_lazy
+from django.views.generic import CreateView, ListView, TemplateView, View
 
-from catalog.forms import EventForm
+from catalog.forms import DirectionForm, EventForm, EventTypeForm
 from catalog.models import Direction, Event, EventType
-from users.mixins import CuratorRequiredMixin
+from users.mixins import AdminRequiredMixin, CuratorRequiredMixin
 
 
 class EventsView(TemplateView):
@@ -645,3 +648,205 @@ class CuratorEventCreateView(CuratorRequiredMixin, CreateView):
             f'Мероприятие «{event.title}» успешно создано.',
         )
         return super().form_valid(form)
+
+
+class AdminDirectionsView(AdminRequiredMixin, ListView):
+    """Админ-страница управления научными направлениями."""
+
+    model = Direction
+    template_name = 'catalog/admin/directions.html'
+    context_object_name = 'directions'
+    paginate_by = 50
+
+    def get_queryset(self):
+        """Возвращает направления с подсчётом связанных мероприятий."""
+        return (
+            Direction.objects
+            .annotate(events_count=Count('events'))
+            .order_by('title')
+        )
+
+    def get_context_data(self, **kwargs):
+        """Добавляет форму создания нового направления."""
+        context = super().get_context_data(**kwargs)
+        context['form'] = kwargs.get('form') or DirectionForm()
+        context['edit_form'] = kwargs.get('edit_form')
+        context['editing_id'] = kwargs.get('editing_id')
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Создаёт новое направление или возвращает форму с ошибками."""
+        form = DirectionForm(request.POST)
+        if form.is_valid():
+            direction = form.save()
+            messages.success(
+                request,
+                f'Направление «{direction.title}» добавлено.',
+            )
+            return HttpResponseRedirect(reverse('users:admin_directions'))
+        self.object_list = self.get_queryset()
+        context = self.get_context_data(form=form)
+        return self.render_to_response(context)
+
+
+class AdminDirectionUpdateView(AdminRequiredMixin, View):
+    """Обработка редактирования направления через inline-форму."""
+
+    http_method_names = ['get', 'post']
+
+    def get(self, request, pk, *args, **kwargs):
+        """Показывает список направлений с открытой формой редактирования."""
+        direction = get_object_or_404(Direction, pk=pk)
+        view = AdminDirectionsView()
+        view.setup(request)
+        view.object_list = view.get_queryset()
+        context = view.get_context_data(
+            edit_form=DirectionForm(instance=direction),
+            editing_id=direction.pk,
+        )
+        return view.render_to_response(context)
+
+    def post(self, request, pk, *args, **kwargs):
+        """Сохраняет изменения направления."""
+        direction = get_object_or_404(Direction, pk=pk)
+        form = DirectionForm(request.POST, instance=direction)
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request,
+                f'Направление «{direction.title}» обновлено.',
+            )
+            return HttpResponseRedirect(reverse('users:admin_directions'))
+        view = AdminDirectionsView()
+        view.setup(request)
+        view.object_list = view.get_queryset()
+        context = view.get_context_data(
+            edit_form=form,
+            editing_id=direction.pk,
+        )
+        return view.render_to_response(context)
+
+
+class AdminDirectionDeleteView(AdminRequiredMixin, View):
+    """Удаление направления (если не используется в мероприятиях)."""
+
+    http_method_names = ['post']
+
+    def post(self, request, pk, *args, **kwargs):
+        """Удаляет направление или показывает сообщение о блокировке."""
+        direction = get_object_or_404(Direction, pk=pk)
+        title = direction.title
+        try:
+            direction.delete()
+            messages.success(
+                request,
+                f'Направление «{title}» удалено.',
+            )
+        except ProtectedError:
+            messages.error(
+                request,
+                f'Нельзя удалить направление «{title}»: к нему привязаны '
+                f'мероприятия. Сначала смените направление у этих событий.',
+            )
+        return redirect('users:admin_directions')
+
+
+class AdminEventTypesView(AdminRequiredMixin, ListView):
+    """Админ-страница управления типами мероприятий."""
+
+    model = EventType
+    template_name = 'catalog/admin/event_types.html'
+    context_object_name = 'event_types'
+    paginate_by = 50
+
+    def get_queryset(self):
+        """Возвращает типы мероприятий с подсчётом связанных событий."""
+        return (
+            EventType.objects
+            .annotate(events_count=Count('events'))
+            .order_by('title')
+        )
+
+    def get_context_data(self, **kwargs):
+        """Добавляет форму создания нового типа мероприятия."""
+        context = super().get_context_data(**kwargs)
+        context['form'] = kwargs.get('form') or EventTypeForm()
+        context['edit_form'] = kwargs.get('edit_form')
+        context['editing_id'] = kwargs.get('editing_id')
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Создаёт новый тип мероприятия или возвращает форму с ошибками."""
+        form = EventTypeForm(request.POST)
+        if form.is_valid():
+            event_type = form.save()
+            messages.success(
+                request,
+                f'Тип мероприятия «{event_type.title}» добавлен.',
+            )
+            return HttpResponseRedirect(reverse('users:admin_event_types'))
+        self.object_list = self.get_queryset()
+        context = self.get_context_data(form=form)
+        return self.render_to_response(context)
+
+
+class AdminEventTypeUpdateView(AdminRequiredMixin, View):
+    """Обработка редактирования типа мероприятия через inline-форму."""
+
+    http_method_names = ['get', 'post']
+
+    def get(self, request, pk, *args, **kwargs):
+        """Показывает список типов с открытой формой редактирования."""
+        event_type = get_object_or_404(EventType, pk=pk)
+        view = AdminEventTypesView()
+        view.setup(request)
+        view.object_list = view.get_queryset()
+        context = view.get_context_data(
+            edit_form=EventTypeForm(instance=event_type),
+            editing_id=event_type.pk,
+        )
+        return view.render_to_response(context)
+
+    def post(self, request, pk, *args, **kwargs):
+        """Сохраняет изменения типа мероприятия."""
+        event_type = get_object_or_404(EventType, pk=pk)
+        form = EventTypeForm(request.POST, instance=event_type)
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request,
+                f'Тип мероприятия «{event_type.title}» обновлён.',
+            )
+            return HttpResponseRedirect(reverse('users:admin_event_types'))
+        view = AdminEventTypesView()
+        view.setup(request)
+        view.object_list = view.get_queryset()
+        context = view.get_context_data(
+            edit_form=form,
+            editing_id=event_type.pk,
+        )
+        return view.render_to_response(context)
+
+
+class AdminEventTypeDeleteView(AdminRequiredMixin, View):
+    """Удаление типа мероприятия (если не используется)."""
+
+    http_method_names = ['post']
+
+    def post(self, request, pk, *args, **kwargs):
+        """Удаляет тип или показывает сообщение о блокировке."""
+        event_type = get_object_or_404(EventType, pk=pk)
+        title = event_type.title
+        try:
+            event_type.delete()
+            messages.success(
+                request,
+                f'Тип мероприятия «{title}» удалён.',
+            )
+        except ProtectedError:
+            messages.error(
+                request,
+                f'Нельзя удалить тип «{title}»: к нему привязаны мероприятия. '
+                f'Сначала смените тип у этих событий.',
+            )
+        return redirect('users:admin_event_types')

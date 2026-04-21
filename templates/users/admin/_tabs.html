@@ -1,0 +1,21 @@
+{% comment %}
+    Навигация по разделам админ-панели. Ожидает переменную ``active_tab``
+    со значением: 'users', 'directions' или 'event_types'.
+{% endcomment %}
+<nav class="admin-tabs" aria-label="Разделы админ-панели">
+    <a href="{% url 'users:admin_users' %}"
+       class="admin-tabs__link {% if active_tab == 'users' %}is-active{% endif %}">
+        <i class="bi bi-people"></i>
+        Пользователи
+    </a>
+    <a href="{% url 'users:admin_directions' %}"
+       class="admin-tabs__link {% if active_tab == 'directions' %}is-active{% endif %}">
+        <i class="bi bi-diagram-3"></i>
+        Направления
+    </a>
+    <a href="{% url 'users:admin_event_types' %}"
+       class="admin-tabs__link {% if active_tab == 'event_types' %}is-active{% endif %}">
+        <i class="bi bi-calendar2-event"></i>
+        Типы мероприятий
+    </a>
+</nav>
