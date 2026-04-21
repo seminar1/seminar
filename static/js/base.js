@@ -89,10 +89,40 @@
         });
     }
 
+    function initUserMenu() {
+        const menu = document.getElementById('userMenu');
+        const trigger = document.getElementById('userMenuTrigger');
+        if (!menu || !trigger) return;
+
+        function closeMenu() {
+            menu.classList.remove('is-open');
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        function toggleMenu(event) {
+            event.stopPropagation();
+            const isOpen = menu.classList.toggle('is-open');
+            trigger.setAttribute('aria-expanded', String(isOpen));
+        }
+
+        trigger.addEventListener('click', toggleMenu);
+        document.addEventListener('click', (event) => {
+            if (!menu.contains(event.target)) {
+                closeMenu();
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeMenu();
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         handleScroll();
         initSmoothScroll();
         initReveal();
+        initUserMenu();
         if (burger) {
             burger.addEventListener('click', toggleNav);
         }

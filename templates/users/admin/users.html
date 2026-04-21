@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Пользователи — Админ-панель{% endblock %}
+
+{% block meta_description %}Админ-панель сервиса «Научный Центр»: управление пользователями и их ролями.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="admin-page">
+    <div class="container">
+        <header class="admin-page__header">
+            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+                <a href="{% url 'catalog:landing' %}">Главная</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>Админ-панель</span>
+            </nav>
+            <div class="admin-page__titles">
+                <div>
+                    <span class="admin-page__eyebrow">
+                        <i class="bi bi-shield-lock"></i>
+                        Панель администратора
+                    </span>
+                    <h1 class="admin-page__title">Пользователи</h1>
+                    <p class="admin-page__lead">
+                        Управляйте ролями пользователей сервиса. Назначайте
+                        администраторов и кураторов из числа зарегистрированных.
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        {% if messages %}
+            <div class="admin-messages">
+                {% for message in messages %}
+                    <div class="auth-alert auth-alert--{{ message.tags|default:'info' }}">
+                        <i class="bi bi-info-circle"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="admin-stats">
+            <div class="admin-stat">
+                <div class="admin-stat__value">{{ total_count }}</div>
+                <div class="admin-stat__label">Всего пользователей</div>
+            </div>
+            <div class="admin-stat admin-stat--admin">
+                <div class="admin-stat__value">{{ admins_count }}</div>
+                <div class="admin-stat__label">Администраторы</div>
+            </div>
+            <div class="admin-stat admin-stat--curator">
+                <div class="admin-stat__value">{{ curators_count }}</div>
+                <div class="admin-stat__label">Кураторы</div>
+            </div>
+            <div class="admin-stat admin-stat--user">
+                <div class="admin-stat__value">{{ users_count }}</div>
+                <div class="admin-stat__label">Пользователи</div>
+            </div>
+        </div>
+
+        <form method="get" class="admin-filters">
+            <div class="admin-filters__search">
+                <i class="bi bi-search"></i>
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Поиск по логину, e-mail или ФИО"
+                    class="admin-filters__input"
+                >
+            </div>
+            <div class="admin-filters__select-wrap">
+                <select name="role" class="admin-filters__select">
+                    <option value="">Все роли</option>
+                    {% for value, label in role_choices %}
+                        <option value="{{ value }}" {% if current_role == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn--primary">
+                <i class="bi bi-funnel"></i>
+                Применить
+            </button>
+            {% if search_query or current_role %}
+                <a href="{% url 'users:admin_users' %}" class="btn btn--ghost">Сбросить</a>
+            {% endif %}
+        </form>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Пользователь</th>
+                        <th>E-mail</th>
+                        <th>Дата регистрации</th>
+                        <th>Текущая роль</th>
+                        <th>Изменить роль</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in users_list %}
+                        <tr {% if item.pk == request.user.pk %}class="admin-table__row--self"{% endif %}>
+                            <td>
+                                <div class="admin-user">
+                                    <span class="admin-user__avatar">
+                                        {{ item.username|slice:":1"|upper }}
+                                    </span>
+                                    <div class="admin-user__info">
+                                        <div class="admin-user__name">
+                                            {{ item.get_full_name|default:item.username }}
+                                        </div>
+                                        <div class="admin-user__login">@{{ item.username }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="admin-table__email">{{ item.email|default:"—" }}</td>
+                            <td class="admin-table__date">
+                                {{ item.date_joined|date:"d.m.Y" }}
+                            </td>
+                            <td>
+                                <span class="role-badge role-badge--{{ item.role }}">
+                                    {{ item.get_role_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if item.pk == request.user.pk %}
+                                    <span class="admin-table__hint">Это вы</span>
+                                {% else %}
+                                    <form method="post" action="{% url 'users:admin_user_role' item.pk %}" class="admin-role-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <select name="role" class="admin-users__select">
+                                            {% for value, label in role_choices %}
+                                                <option value="{{ value }}" {% if item.role == value %}selected{% endif %}>
+                                                    {{ label }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="btn btn--primary btn--sm">
+                                            Сохранить
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="admin-table__empty">
+                                <i class="bi bi-inbox"></i>
+                                Пользователей по заданным фильтрам не найдено.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+            <nav class="admin-pagination" aria-label="Навигация по страницам">
+                {% if page_obj.has_previous %}
+                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if current_role %}role={{ current_role }}&{% endif %}page={{ page_obj.previous_page_number }}" class="admin-pagination__link">
+                        <i class="bi bi-chevron-left"></i> Назад
+                    </a>
+                {% endif %}
+                <span class="admin-pagination__info">
+                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if current_role %}role={{ current_role }}&{% endif %}page={{ page_obj.next_page_number }}" class="admin-pagination__link">
+                        Вперёд <i class="bi bi-chevron-right"></i>
+                    </a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

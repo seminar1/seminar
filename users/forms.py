@@ -107,3 +107,32 @@ class LoginForm(StyledFormMixin, AuthenticationForm):
         label='Пароль',
         widget=forms.PasswordInput(attrs={'placeholder': '••••••••'}),
     )
+
+
+class UserRoleForm(forms.ModelForm):
+    """Форма смены роли пользователя в админ-панели.
+
+    Изменение роли синхронизируется с флагами ``is_staff`` / ``is_superuser``:
+    роль администратора выдаёт полные права суперпользователя, а переход
+    в другие роли эти флаги сбрасывает.
+    """
+
+    class Meta:
+        model = User
+        fields = ('role',)
+        widgets = {
+            'role': forms.Select(attrs={'class': 'admin-users__select'}),
+        }
+
+    def save(self, commit=True):
+        """Синхронизирует роль с флагами прав доступа Django."""
+        user = super().save(commit=False)
+        if user.role == User.Role.ADMIN:
+            user.is_staff = True
+            user.is_superuser = True
+        else:
+            user.is_staff = False
+            user.is_superuser = False
+        if commit:
+            user.save()
+        return user
