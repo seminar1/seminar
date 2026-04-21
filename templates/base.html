@@ -62,6 +62,12 @@
                                 <i class="bi bi-person"></i>
                                 Личный кабинет
                             </a>
+                            {% if user.is_curator or user.is_administrator %}
+                                <a class="user-menu__item" href="{% url 'catalog:curator_events' %}" role="menuitem">
+                                    <i class="bi bi-briefcase"></i>
+                                    Панель куратора
+                                </a>
+                            {% endif %}
                             {% if user.is_administrator %}
                                 <a class="user-menu__item" href="{% url 'users:admin_users' %}" role="menuitem">
                                     <i class="bi bi-shield-lock"></i>

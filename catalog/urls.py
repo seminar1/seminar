@@ -4,6 +4,8 @@ from django.urls import path
 from catalog.views import (
     AboutView,
     ContactsView,
+    CuratorEventCreateView,
+    CuratorEventsView,
     EventsView,
     FaqView,
     LandingView,
@@ -17,4 +19,14 @@ urlpatterns = [
     path('about/', AboutView.as_view(), name='about'),
     path('faq/', FaqView.as_view(), name='faq'),
     path('contacts/', ContactsView.as_view(), name='contacts'),
+    path(
+        'curator/events/',
+        CuratorEventsView.as_view(),
+        name='curator_events',
+    ),
+    path(
+        'curator/events/new/',
+        CuratorEventCreateView.as_view(),
+        name='curator_event_create',
+    ),
 ]

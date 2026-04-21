@@ -1,7 +1,11 @@
 """Представления приложения catalog."""
-from django.views.generic import TemplateView
+from django.contrib import messages
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, ListView, TemplateView
 
+from catalog.forms import EventForm
 from catalog.models import Direction, Event, EventType
+from users.mixins import CuratorRequiredMixin
 
 
 class EventsView(TemplateView):
@@ -579,3 +583,65 @@ class LandingView(TemplateView):
             },
         ]
         return context
+
+
+class CuratorEventsView(CuratorRequiredMixin, ListView):
+    """Кураторская панель: список мероприятий с быстрыми действиями."""
+
+    model = Event
+    template_name = 'catalog/curator/events.html'
+    context_object_name = 'events_list'
+    paginate_by = 20
+
+    def get_queryset(self):
+        """Возвращает мероприятия с применёнными фильтрами и поиском."""
+        queryset = (
+            Event.objects
+            .select_related('direction', 'event_type', 'organizer')
+            .order_by('-starts_at')
+        )
+        query = self.request.GET.get('q', '').strip()
+        if query:
+            queryset = queryset.filter(title__icontains=query)
+        status = self.request.GET.get('status', '').strip()
+        if status in dict(Event.Status.choices):
+            queryset = queryset.filter(status=status)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        """Добавляет справочники и агрегаты для шапки дашборда."""
+        context = super().get_context_data(**kwargs)
+        context['status_choices'] = Event.Status.choices
+        context['current_status'] = self.request.GET.get('status', '')
+        context['search_query'] = self.request.GET.get('q', '')
+        qs = Event.objects.all()
+        context['total_count'] = qs.count()
+        context['published_count'] = qs.filter(
+            status=Event.Status.PUBLISHED
+        ).count()
+        context['draft_count'] = qs.filter(status=Event.Status.DRAFT).count()
+        context['completed_count'] = qs.filter(
+            status=Event.Status.COMPLETED
+        ).count()
+        return context
+
+
+class CuratorEventCreateView(CuratorRequiredMixin, CreateView):
+    """Создание нового научного мероприятия куратором."""
+
+    model = Event
+    form_class = EventForm
+    template_name = 'catalog/curator/event_form.html'
+    success_url = reverse_lazy('catalog:curator_events')
+
+    def form_valid(self, form):
+        """Сохраняет мероприятие и проставляет организатора."""
+        event = form.save(commit=False)
+        event.organizer = self.request.user
+        event.save()
+        self.object = event
+        messages.success(
+            self.request,
+            f'Мероприятие «{event.title}» успешно создано.',
+        )
+        return super().form_valid(form)

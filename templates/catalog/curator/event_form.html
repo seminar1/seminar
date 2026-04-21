@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Новое мероприятие — Панель куратора{% endblock %}
+
+{% block meta_description %}Создание нового научного мероприятия в кураторской панели электронного каталога МУИВ.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/curator.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="admin-page">
+    <div class="container curator-form-wrap">
+        <header class="admin-page__header">
+            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+                <a href="{% url 'catalog:landing' %}">Главная</a>
+                <i class="bi bi-chevron-right"></i>
+                <a href="{% url 'catalog:curator_events' %}">Панель куратора</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>Новое мероприятие</span>
+            </nav>
+            <span class="admin-page__eyebrow curator-header__eyebrow">
+                <i class="bi bi-plus-circle"></i>
+                Создание
+            </span>
+            <h1 class="admin-page__title">Новое научное мероприятие</h1>
+            <p class="admin-page__lead">
+                Заполните информацию о мероприятии. Поля, отмеченные
+                звёздочкой, обязательны.
+            </p>
+        </header>
+
+        {% if form.non_field_errors %}
+            <div class="auth-alert auth-alert--error">
+                <i class="bi bi-exclamation-triangle"></i>
+                <div>
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="curator-form" novalidate>
+            {% csrf_token %}
+
+            <div class="curator-form__section">
+                <div class="curator-form__section-title">
+                    <i class="bi bi-info-circle"></i>
+                    Основная информация
+                </div>
+
+                <div class="curator-form__field">
+                    <label for="{{ form.title.id_for_label }}" class="curator-form__label">
+                        {{ form.title.label }} <span class="curator-form__required">*</span>
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="curator-form__error">{{ form.title.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="curator-form__field">
+                    <label for="{{ form.short_description.id_for_label }}" class="curator-form__label">
+                        {{ form.short_description.label }}
+                    </label>
+                    {{ form.short_description }}
+                    {% if form.short_description.help_text %}
+                        <div class="curator-form__hint">{{ form.short_description.help_text }}</div>
+                    {% endif %}
+                    {% if form.short_description.errors %}
+                        <div class="curator-form__error">{{ form.short_description.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="curator-form__field">
+                    <label for="{{ form.description.id_for_label }}" class="curator-form__label">
+                        {{ form.description.label }}
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="curator-form__error">{{ form.description.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="curator-form__section">
+                <div class="curator-form__section-title">
+                    <i class="bi bi-diagram-3"></i>
+                    Классификация
+                </div>
+                <div class="curator-form__grid">
+                    <div class="curator-form__field">
+                        <label for="{{ form.direction.id_for_label }}" class="curator-form__label">
+                            {{ form.direction.label }} <span class="curator-form__required">*</span>
+                        </label>
+                        {{ form.direction }}
+                        {% if form.direction.errors %}
+                            <div class="curator-form__error">{{ form.direction.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="curator-form__field">
+                        <label for="{{ form.event_type.id_for_label }}" class="curator-form__label">
+                            {{ form.event_type.label }} <span class="curator-form__required">*</span>
+                        </label>
+                        {{ form.event_type }}
+                        {% if form.event_type.errors %}
+                            <div class="curator-form__error">{{ form.event_type.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="curator-form__field">
+                        <label for="{{ form.event_format.id_for_label }}" class="curator-form__label">
+                            {{ form.event_format.label }} <span class="curator-form__required">*</span>
+                        </label>
+                        {{ form.event_format }}
+                        {% if form.event_format.errors %}
+                            <div class="curator-form__error">{{ form.event_format.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="curator-form__section">
+                <div class="curator-form__section-title">
+                    <i class="bi bi-clock"></i>
+                    Дата и место
+                </div>
+                <div class="curator-form__grid">
+                    <div class="curator-form__field">
+                        <label for="{{ form.starts_at.id_for_label }}" class="curator-form__label">
+                            {{ form.starts_at.label }} <span class="curator-form__required">*</span>
+                        </label>
+                        {{ form.starts_at }}
+                        {% if form.starts_at.errors %}
+                            <div class="curator-form__error">{{ form.starts_at.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="curator-form__field">
+                        <label for="{{ form.ends_at.id_for_label }}" class="curator-form__label">
+                            {{ form.ends_at.label }}
+                        </label>
+                        {{ form.ends_at }}
+                        {% if form.ends_at.errors %}
+                            <div class="curator-form__error">{{ form.ends_at.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="curator-form__field">
+                    <label for="{{ form.location.id_for_label }}" class="curator-form__label">
+                        {{ form.location.label }}
+                    </label>
+                    {{ form.location }}
+                    {% if form.location.help_text %}
+                        <div class="curator-form__hint">{{ form.location.help_text }}</div>
+                    {% endif %}
+                    {% if form.location.errors %}
+                        <div class="curator-form__error">{{ form.location.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="curator-form__field">
+                    <label for="{{ form.online_url.id_for_label }}" class="curator-form__label">
+                        {{ form.online_url.label }}
+                    </label>
+                    {{ form.online_url }}
+                    {% if form.online_url.help_text %}
+                        <div class="curator-form__hint">{{ form.online_url.help_text }}</div>
+                    {% endif %}
+                    {% if form.online_url.errors %}
+                        <div class="curator-form__error">{{ form.online_url.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="curator-form__section">
+                <div class="curator-form__section-title">
+                    <i class="bi bi-sliders"></i>
+                    Дополнительно
+                </div>
+                <div class="curator-form__grid">
+                    <div class="curator-form__field">
+                        <label for="{{ form.seats_total.id_for_label }}" class="curator-form__label">
+                            {{ form.seats_total.label }}
+                        </label>
+                        {{ form.seats_total }}
+                        {% if form.seats_total.help_text %}
+                            <div class="curator-form__hint">{{ form.seats_total.help_text }}</div>
+                        {% endif %}
+                        {% if form.seats_total.errors %}
+                            <div class="curator-form__error">{{ form.seats_total.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="curator-form__field">
+                        <label for="{{ form.status.id_for_label }}" class="curator-form__label">
+                            {{ form.status.label }} <span class="curator-form__required">*</span>
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div class="curator-form__error">{{ form.status.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="curator-form__field">
+                    <label for="{{ form.cover.id_for_label }}" class="curator-form__label">
+                        {{ form.cover.label }}
+                    </label>
+                    {{ form.cover }}
+                    {% if form.cover.errors %}
+                        <div class="curator-form__error">{{ form.cover.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <label class="curator-form__toggle">
+                    {{ form.is_featured }}
+                    <span>{{ form.is_featured.label }}</span>
+                    {% if form.is_featured.help_text %}
+                        <span class="curator-form__hint">{{ form.is_featured.help_text }}</span>
+                    {% endif %}
+                </label>
+            </div>
+
+            <div class="curator-form__actions">
+                <a href="{% url 'catalog:curator_events' %}" class="btn btn--ghost">
+                    Отмена
+                </a>
+                <button type="submit" class="btn btn--primary btn--lg">
+                    <i class="bi bi-check2-circle"></i>
+                    Создать мероприятие
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

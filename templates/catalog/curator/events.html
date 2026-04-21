@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мероприятия — Панель куратора{% endblock %}
+
+{% block meta_description %}Кураторская панель управления мероприятиями в электронном каталоге МУИВ им. С.Ю. Витте.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/curator.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="admin-page">
+    <div class="container">
+        <header class="admin-page__header">
+            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+                <a href="{% url 'catalog:landing' %}">Главная</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>Панель куратора</span>
+            </nav>
+            <div class="curator-header">
+                <div>
+                    <span class="admin-page__eyebrow curator-header__eyebrow">
+                        <i class="bi bi-briefcase"></i>
+                        Панель куратора
+                    </span>
+                    <h1 class="admin-page__title">Мероприятия</h1>
+                    <p class="admin-page__lead">
+                        Создавайте конференции, семинары и другие научные
+                        события, управляйте их статусами и отслеживайте
+                        публикации.
+                    </p>
+                </div>
+                <a href="{% url 'catalog:curator_event_create' %}" class="btn btn--primary btn--lg">
+                    <i class="bi bi-plus-lg"></i>
+                    Создать мероприятие
+                </a>
+            </div>
+        </header>
+
+        <div class="admin-stats">
+            <div class="admin-stat">
+                <div class="admin-stat__value">{{ total_count }}</div>
+                <div class="admin-stat__label">Всего мероприятий</div>
+            </div>
+            <div class="admin-stat admin-stat--admin">
+                <div class="admin-stat__value">{{ published_count }}</div>
+                <div class="admin-stat__label">Опубликовано</div>
+            </div>
+            <div class="admin-stat admin-stat--curator">
+                <div class="admin-stat__value">{{ draft_count }}</div>
+                <div class="admin-stat__label">Черновики</div>
+            </div>
+            <div class="admin-stat admin-stat--user">
+                <div class="admin-stat__value">{{ completed_count }}</div>
+                <div class="admin-stat__label">Завершены</div>
+            </div>
+        </div>
+
+        <form method="get" class="admin-filters">
+            <div class="admin-filters__search">
+                <i class="bi bi-search"></i>
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Поиск по названию мероприятия"
+                    class="admin-filters__input"
+                >
+            </div>
+            <div class="admin-filters__select-wrap">
+                <select name="status" class="admin-filters__select">
+                    <option value="">Все статусы</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn--primary">
+                <i class="bi bi-funnel"></i>
+                Применить
+            </button>
+            {% if search_query or current_status %}
+                <a href="{% url 'catalog:curator_events' %}" class="btn btn--ghost">Сбросить</a>
+            {% endif %}
+        </form>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Мероприятие</th>
+                        <th>Направление</th>
+                        <th>Тип</th>
+                        <th>Дата</th>
+                        <th>Формат</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events_list %}
+                        <tr>
+                            <td>
+                                <div class="curator-event">
+                                    <span class="curator-event__icon">
+                                        <i class="bi bi-calendar2-event"></i>
+                                    </span>
+                                    <div>
+                                        <div class="curator-event__title">{{ event.title }}</div>
+                                        {% if event.organizer %}
+                                            <div class="curator-event__organizer">
+                                                Организатор:
+                                                {{ event.organizer.get_full_name|default:event.organizer.username }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ event.direction.title }}</td>
+                            <td>{{ event.event_type.title }}</td>
+                            <td class="admin-table__date">{{ event.starts_at|date:"d.m.Y H:i" }}</td>
+                            <td>{{ event.get_event_format_display }}</td>
+                            <td>
+                                <span class="status-badge status-badge--{{ event.status }}">
+                                    {{ event.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="admin-table__empty">
+                                <i class="bi bi-calendar2-x"></i>
+                                Мероприятий пока нет. Создайте первое, нажав кнопку «Создать мероприятие».
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+            <nav class="admin-pagination" aria-label="Навигация по страницам">
+                {% if page_obj.has_previous %}
+                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if current_status %}status={{ current_status }}&{% endif %}page={{ page_obj.previous_page_number }}" class="admin-pagination__link">
+                        <i class="bi bi-chevron-left"></i> Назад
+                    </a>
+                {% endif %}
+                <span class="admin-pagination__info">
+                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if current_status %}status={{ current_status }}&{% endif %}page={{ page_obj.next_page_number }}" class="admin-pagination__link">
+                        Вперёд <i class="bi bi-chevron-right"></i>
+                    </a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
