@@ -1,7 +1,7 @@
 """Формы приложения catalog: управление мероприятиями и справочниками."""
 from django import forms
 
-from catalog.models import Direction, Event, EventType
+from catalog.models import Direction, Event, EventRegistration, EventType
 
 
 class DirectionForm(forms.ModelForm):
@@ -194,3 +194,79 @@ class EventForm(forms.ModelForm):
             )
 
         return cleaned
+
+
+class EventRegistrationForm(forms.ModelForm):
+    """Форма подачи заявки на участие в мероприятии.
+
+    Отображается в шаблоне подтверждения регистрации. Поля контактов
+    инициализируются данными из профиля пользователя и становятся
+    снимком заявки — редактирование профиля в будущем не влияет на
+    поданную заявку.
+    """
+
+    default_css_class = 'reg-form__input'
+
+    class Meta:
+        model = EventRegistration
+        fields = (
+            'full_name',
+            'email',
+            'phone',
+            'organization',
+            'position',
+            'note',
+        )
+        widgets = {
+            'full_name': forms.TextInput(
+                attrs={'placeholder': 'Иванов Иван Иванович', 'autocomplete': 'name'}
+            ),
+            'email': forms.EmailInput(
+                attrs={'placeholder': 'ivanov@example.com', 'autocomplete': 'email'}
+            ),
+            'phone': forms.TextInput(
+                attrs={'placeholder': '+7 (999) 000-00-00', 'autocomplete': 'tel'}
+            ),
+            'organization': forms.TextInput(
+                attrs={'placeholder': 'МУИВ, факультет ИТ'}
+            ),
+            'position': forms.TextInput(
+                attrs={'placeholder': 'Студент, преподаватель, научный сотрудник'}
+            ),
+            'note': forms.Textarea(
+                attrs={
+                    'rows': 3,
+                    'placeholder': (
+                        'Дополнительная информация для организаторов '
+                        '(необязательно).'
+                    ),
+                }
+            ),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+        self.fields['full_name'].required = True
+        self.fields['email'].required = True
+
+        if user is not None and not self.is_bound and not self.instance.pk:
+            self.fields['full_name'].initial = (
+                user.get_full_name() or user.username
+            )
+            self.fields['email'].initial = user.email or ''
+            self.fields['phone'].initial = getattr(user, 'phone', '') or ''
+            self.fields['organization'].initial = (
+                getattr(user, 'organization', '') or ''
+            )
+            self.fields['position'].initial = (
+                getattr(user, 'position', '') or ''
+            )
+
+        for field in self.fields.values():
+            widget = field.widget
+            existing = widget.attrs.get('class', '')
+            widget.attrs['class'] = (
+                f'{existing} {self.default_css_class}'.strip()
+            )

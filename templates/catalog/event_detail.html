@@ -111,14 +111,51 @@
                 </div>
 
                 <div class="event-card-side__actions">
-                    {% if event.is_registration_open %}
-                        <a href="#" class="btn btn--primary btn--lg">
-                            <i class="bi bi-person-plus"></i>
-                            Подать заявку
+                    {% if has_active_registration %}
+                        <div class="event-card-side__status event-card-side__status--{{ user_registration.status }}">
+                            <i class="bi bi-check2-circle"></i>
+                            <div>
+                                <span class="event-card-side__status-label">Ваша заявка</span>
+                                <strong>
+                                    {{ user_registration.get_status_display }}
+                                    {% if user_registration.status == 'waitlist' and user_registration.waitlist_position %}
+                                        · №{{ user_registration.waitlist_position }}
+                                    {% endif %}
+                                </strong>
+                            </div>
+                        </div>
+                        <form method="post" action="{% url 'catalog:registration_cancel' user_registration.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'catalog:event_detail' event.slug %}">
+                            <button type="submit" class="btn btn--danger btn--lg"
+                                onclick="return confirm('Отменить заявку на это мероприятие?');">
+                                <i class="bi bi-x-circle"></i>
+                                Отменить заявку
+                            </button>
+                        </form>
+                    {% elif not user.is_authenticated %}
+                        <a href="{% url 'users:login' %}?next={% url 'catalog:event_register' event.slug %}"
+                            class="btn btn--primary btn--lg">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Войти для регистрации
                         </a>
-                    {% elif event.is_full %}
+                    {% elif can_register %}
+                        {% if event.is_full and event.allow_waitlist %}
+                            <a href="{% url 'catalog:event_register' event.slug %}"
+                                class="btn btn--outline btn--lg">
+                                <i class="bi bi-hourglass"></i>
+                                В лист ожидания
+                            </a>
+                        {% else %}
+                            <a href="{% url 'catalog:event_register' event.slug %}"
+                                class="btn btn--primary btn--lg">
+                                <i class="bi bi-person-plus"></i>
+                                Подать заявку
+                            </a>
+                        {% endif %}
+                    {% elif event.is_full and not event.allow_waitlist %}
                         <button type="button" class="btn btn--outline btn--lg" disabled>
-                            <i class="bi bi-hourglass"></i>
+                            <i class="bi bi-slash-circle"></i>
                             Мест нет
                         </button>
                     {% elif event.status == 'completed' %}
@@ -134,7 +171,7 @@
                     {% else %}
                         <button type="button" class="btn btn--ghost btn--lg" disabled>
                             <i class="bi bi-clock-history"></i>
-                            Регистрация скоро откроется
+                            Регистрация закрыта
                         </button>
                     {% endif %}
                     <a href="{% url 'catalog:events' %}" class="btn btn--ghost">

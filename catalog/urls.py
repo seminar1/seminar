@@ -8,9 +8,12 @@ from catalog.views import (
     CuratorEventCreateView,
     CuratorEventsView,
     EventDetailView,
+    EventRegisterView,
+    EventRegistrationCancelView,
     EventsView,
     FaqView,
     LandingView,
+    MyRegistrationsView,
 )
 
 register_converter(UnicodeSlugConverter, 'uslug')
@@ -24,6 +27,21 @@ urlpatterns = [
         'events/<uslug:slug>/',
         EventDetailView.as_view(),
         name='event_detail',
+    ),
+    path(
+        'events/<uslug:slug>/register/',
+        EventRegisterView.as_view(),
+        name='event_register',
+    ),
+    path(
+        'registrations/<int:pk>/cancel/',
+        EventRegistrationCancelView.as_view(),
+        name='registration_cancel',
+    ),
+    path(
+        'my/registrations/',
+        MyRegistrationsView.as_view(),
+        name='my_registrations',
     ),
     path('about/', AboutView.as_view(), name='about'),
     path('faq/', FaqView.as_view(), name='faq'),

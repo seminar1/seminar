@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мои заявки — Научный Центр МУИВ им. С.Ю. Витте{% endblock %}
+
+{% block meta_description %}Личный список заявок на научные мероприятия — статусы, лист ожидания, история участия.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/registration.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="my-reg">
+    <div class="container">
+        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+            <a href="{% url 'catalog:landing' %}">Главная</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Мои заявки</span>
+        </nav>
+
+        <header class="my-reg__header">
+            <div>
+                <span class="section__eyebrow">Личный кабинет</span>
+                <h1 class="my-reg__title">Мои заявки</h1>
+                <p class="my-reg__lead">
+                    Все ваши заявки на научные мероприятия: статусы, история
+                    участия и возможность отменить активную заявку.
+                </p>
+            </div>
+            <a href="{% url 'catalog:events' %}" class="btn btn--primary btn--icon">
+                <i class="bi bi-calendar2-event"></i>
+                К каталогу мероприятий
+            </a>
+        </header>
+
+        <div class="my-reg__stats">
+            <div class="my-reg__stat">
+                <span class="my-reg__stat-value">{{ stats.total }}</span>
+                <span class="my-reg__stat-label">Всего заявок</span>
+            </div>
+            <div class="my-reg__stat my-reg__stat--confirmed">
+                <span class="my-reg__stat-value">{{ stats.confirmed }}</span>
+                <span class="my-reg__stat-label">Подтверждено</span>
+            </div>
+            <div class="my-reg__stat my-reg__stat--pending">
+                <span class="my-reg__stat-value">{{ stats.pending }}</span>
+                <span class="my-reg__stat-label">Ожидают подтверждения</span>
+            </div>
+            <div class="my-reg__stat my-reg__stat--waitlist">
+                <span class="my-reg__stat-value">{{ stats.waitlist }}</span>
+                <span class="my-reg__stat-label">В листе ожидания</span>
+            </div>
+        </div>
+
+        {% if registrations %}
+            <div class="my-reg__list">
+                {% for reg in registrations %}
+                    <article class="reg-item reg-item--{{ reg.status }}">
+                        <div class="reg-item__date">
+                            <span class="reg-item__day">{{ reg.event.date_day }}</span>
+                            <span class="reg-item__month">{{ reg.event.date_month_short }}</span>
+                        </div>
+
+                        <div class="reg-item__body">
+                            <div class="reg-item__tags">
+                                <span class="reg-item__type">{{ reg.event.event_type.title }}</span>
+                                <span class="reg-item__status reg-item__status--{{ reg.status }}">
+                                    <i class="bi bi-circle-fill"></i>
+                                    {{ reg.get_status_display }}
+                                    {% if reg.status == 'waitlist' and reg.waitlist_position %}
+                                        · №{{ reg.waitlist_position }}
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <h3 class="reg-item__title">
+                                <a href="{% url 'catalog:event_detail' reg.event.slug %}">
+                                    {{ reg.event.title }}
+                                </a>
+                            </h3>
+
+                            <ul class="reg-item__meta">
+                                <li><i class="bi bi-calendar3"></i> {{ reg.event.date_full }}</li>
+                                <li><i class="bi bi-clock"></i> {{ reg.event.time_range }}</li>
+                                {% if reg.event.location %}
+                                    <li><i class="bi bi-geo-alt"></i> {{ reg.event.location }}</li>
+                                {% endif %}
+                                <li><i class="bi bi-bookmark"></i> {{ reg.event.direction.title }}</li>
+                            </ul>
+
+                            <div class="reg-item__footer">
+                                <span class="reg-item__created">
+                                    <i class="bi bi-send"></i>
+                                    Подано {{ reg.created_at|date:"d.m.Y H:i" }}
+                                </span>
+
+                                <div class="reg-item__actions">
+                                    <a href="{% url 'catalog:event_detail' reg.event.slug %}" class="btn btn--ghost btn--sm">
+                                        Открыть мероприятие
+                                        <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                    {% if reg.is_active %}
+                                        <form method="post" action="{% url 'catalog:registration_cancel' reg.pk %}" class="reg-item__cancel">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{% url 'catalog:my_registrations' %}">
+                                            <button type="submit" class="btn btn--danger btn--sm"
+                                                onclick="return confirm('Отменить заявку на «{{ reg.event.title|escapejs }}»?');">
+                                                <i class="bi bi-x-circle"></i>
+                                                Отменить
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+
+            {% if is_paginated %}
+                <nav class="my-reg__pagination" aria-label="Страницы заявок">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}" class="my-reg__page-link">
+                            <i class="bi bi-chevron-left"></i> Назад
+                        </a>
+                    {% endif %}
+                    <span class="my-reg__page-current">
+                        {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                    </span>
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="my-reg__page-link">
+                            Далее <i class="bi bi-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="my-reg__empty">
+                <i class="bi bi-inbox"></i>
+                <h3>Заявок пока нет</h3>
+                <p>
+                    Выберите интересующее событие в каталоге и подайте заявку —
+                    она сразу появится здесь.
+                </p>
+                <a href="{% url 'catalog:events' %}" class="btn btn--primary">
+                    <i class="bi bi-calendar2-event"></i>
+                    Открыть каталог
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

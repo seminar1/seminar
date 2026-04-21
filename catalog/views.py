@@ -1,9 +1,12 @@
 """Представления приложения catalog."""
 from django.contrib import messages
-from django.db.models import Count, ProtectedError, Q
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
+from django.db.models import Count, Max, ProtectedError, Q
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.views.generic import (
     CreateView,
     DetailView,
@@ -12,8 +15,13 @@ from django.views.generic import (
     View,
 )
 
-from catalog.forms import DirectionForm, EventForm, EventTypeForm
-from catalog.models import Direction, Event, EventType
+from catalog.forms import (
+    DirectionForm,
+    EventForm,
+    EventRegistrationForm,
+    EventTypeForm,
+)
+from catalog.models import Direction, Event, EventRegistration, EventType
 from users.mixins import AdminRequiredMixin, CuratorRequiredMixin
 
 
@@ -101,7 +109,7 @@ class EventDetailView(DetailView):
         )
 
     def get_context_data(self, **kwargs):
-        """Добавляет похожие мероприятия того же направления."""
+        """Добавляет похожие мероприятия и заявку пользователя."""
         context = super().get_context_data(**kwargs)
         event = self.object
         context['related_events'] = (
@@ -114,6 +122,250 @@ class EventDetailView(DetailView):
             .select_related('direction', 'event_type')
             .order_by('starts_at')[:3]
         )
+
+        user = self.request.user
+        user_registration = event.get_user_registration(user)
+        context['user_registration'] = user_registration
+        context['has_active_registration'] = bool(
+            user_registration and user_registration.is_active
+        )
+        context['can_register'] = event.can_user_register(user)
+        return context
+
+
+class EventRegisterView(LoginRequiredMixin, View):
+    """Страница подачи заявки на участие в мероприятии.
+
+    На GET-запросе показывает форму контактных данных, предзаполненную
+    из профиля пользователя. На POST — создаёт запись ``EventRegistration``
+    с учётом правил события: окно приёма заявок, требование подтверждения
+    куратором, лист ожидания при отсутствии мест.
+    """
+
+    template_name = 'catalog/event_register.html'
+
+    def get_event(self):
+        """Возвращает опубликованное мероприятие по slug из URL."""
+        return get_object_or_404(
+            Event.objects.select_related('direction', 'event_type'),
+            slug=self.kwargs['slug'],
+            status=Event.Status.PUBLISHED,
+        )
+
+    def get_existing_registration(self, event, user):
+        """Возвращает активную заявку пользователя, если она есть."""
+        return (
+            event.registrations
+            .filter(user=user, status__in=EventRegistration.ACTIVE_STATUSES)
+            .first()
+        )
+
+    def render(self, request, event, form):
+        """Рендерит шаблон со стандартным набором контекста."""
+        return render(
+            request,
+            self.template_name,
+            {
+                'event': event,
+                'form': form,
+            },
+        )
+
+    def get(self, request, *args, **kwargs):
+        """Показывает форму регистрации (или редиректит при невозможности)."""
+        event = self.get_event()
+        existing = self.get_existing_registration(event, request.user)
+        if existing is not None:
+            messages.info(
+                request,
+                'Вы уже подали заявку на это мероприятие. '
+                'Текущий статус: {status}.'.format(
+                    status=existing.get_status_display().lower()
+                ),
+            )
+            return redirect('catalog:event_detail', slug=event.slug)
+
+        if not event.is_registration_open:
+            messages.error(
+                request,
+                'Приём заявок на это мероприятие сейчас закрыт.',
+            )
+            return redirect('catalog:event_detail', slug=event.slug)
+
+        form = EventRegistrationForm(user=request.user)
+        return self.render(request, event, form)
+
+    def post(self, request, *args, **kwargs):
+        """Обрабатывает подачу заявки с учётом всех бизнес-правил."""
+        event = self.get_event()
+        existing = self.get_existing_registration(event, request.user)
+        if existing is not None:
+            messages.info(
+                request,
+                'Вы уже подали заявку на это мероприятие.',
+            )
+            return redirect('catalog:event_detail', slug=event.slug)
+
+        if not event.is_registration_open:
+            messages.error(
+                request,
+                'Приём заявок на это мероприятие сейчас закрыт.',
+            )
+            return redirect('catalog:event_detail', slug=event.slug)
+
+        form = EventRegistrationForm(request.POST, user=request.user)
+        if not form.is_valid():
+            return self.render(request, event, form)
+
+        with transaction.atomic():
+            event_locked = (
+                Event.objects.select_for_update().get(pk=event.pk)
+            )
+            registration = form.save(commit=False)
+            registration.event = event_locked
+            registration.user = request.user
+            registration.source = EventRegistration.Source.SELF
+
+            is_full = (
+                event_locked.seats_total > 0
+                and event_locked.seats_taken >= event_locked.seats_total
+            )
+
+            if is_full and event_locked.allow_waitlist:
+                registration.status = EventRegistration.Status.WAITLIST
+                last_position = (
+                    event_locked.registrations
+                    .filter(status=EventRegistration.Status.WAITLIST)
+                    .aggregate(last=Max('waitlist_position'))['last']
+                )
+                registration.waitlist_position = (last_position or 0) + 1
+            elif event_locked.requires_approval:
+                registration.status = EventRegistration.Status.PENDING
+            else:
+                registration.status = EventRegistration.Status.CONFIRMED
+                registration.confirmed_at = timezone.now()
+
+            registration.save()
+
+        status = registration.status
+        if status == EventRegistration.Status.CONFIRMED:
+            messages.success(
+                request,
+                f'Вы зарегистрированы на «{event.title}». Ждём вас!',
+            )
+        elif status == EventRegistration.Status.PENDING:
+            messages.success(
+                request,
+                'Заявка отправлена. Куратор свяжется с вами после '
+                'её рассмотрения.',
+            )
+        elif status == EventRegistration.Status.WAITLIST:
+            messages.info(
+                request,
+                'Мест нет, вы добавлены в лист ожидания под номером '
+                f'{registration.waitlist_position}. Мы уведомим вас, '
+                'как только место освободится.',
+            )
+        return redirect('catalog:event_detail', slug=event.slug)
+
+
+class EventRegistrationCancelView(LoginRequiredMixin, View):
+    """Отмена заявки участником мероприятия.
+
+    Работает только с POST-запросом. Участник может отменить лишь
+    собственную активную заявку. При отмене подтверждённой заявки
+    первая запись в листе ожидания автоматически переводится
+    в статус «Подтверждена».
+    """
+
+    http_method_names = ['post']
+
+    def post(self, request, pk, *args, **kwargs):
+        """Отменяет заявку и продвигает лист ожидания."""
+        registration = get_object_or_404(
+            EventRegistration.objects.select_related('event'),
+            pk=pk,
+            user=request.user,
+        )
+
+        if not registration.is_active:
+            messages.info(
+                request,
+                'Эта заявка уже не активна.',
+            )
+            return redirect('catalog:my_registrations')
+
+        event = registration.event
+        was_confirmed = registration.status == EventRegistration.Status.CONFIRMED
+
+        with transaction.atomic():
+            registration.mark_cancelled(by=request.user)
+
+            if was_confirmed and event.seats_total > 0:
+                promoted = (
+                    event.registrations
+                    .filter(status=EventRegistration.Status.WAITLIST)
+                    .order_by('waitlist_position', 'created_at')
+                    .first()
+                )
+                if promoted is not None:
+                    if event.requires_approval:
+                        promoted.status = EventRegistration.Status.PENDING
+                    else:
+                        promoted.status = EventRegistration.Status.CONFIRMED
+                        promoted.confirmed_at = timezone.now()
+                    promoted.waitlist_position = None
+                    promoted.save(update_fields=[
+                        'status',
+                        'confirmed_at',
+                        'waitlist_position',
+                        'updated_at',
+                    ])
+
+        messages.success(
+            request,
+            f'Заявка на «{event.title}» отменена.',
+        )
+
+        next_url = request.POST.get('next')
+        if next_url:
+            return redirect(next_url)
+        return redirect('catalog:my_registrations')
+
+
+class MyRegistrationsView(LoginRequiredMixin, ListView):
+    """Личный список заявок пользователя на научные мероприятия."""
+
+    model = EventRegistration
+    template_name = 'catalog/my_registrations.html'
+    context_object_name = 'registrations'
+    paginate_by = 15
+
+    def get_queryset(self):
+        """Возвращает заявки текущего пользователя, сгруппированные по дате."""
+        return (
+            EventRegistration.objects
+            .filter(user=self.request.user)
+            .select_related('event', 'event__direction', 'event__event_type')
+            .order_by('-created_at')
+        )
+
+    def get_context_data(self, **kwargs):
+        """Добавляет сводную статистику по заявкам пользователя."""
+        context = super().get_context_data(**kwargs)
+        user_regs = EventRegistration.objects.filter(user=self.request.user)
+        context['stats'] = {
+            'total': user_regs.count(),
+            'confirmed': user_regs.filter(
+                status=EventRegistration.Status.CONFIRMED
+            ).count(),
+            'pending': user_regs.filter(
+                status=EventRegistration.Status.PENDING
+            ).count(),
+            'waitlist': user_regs.filter(
+                status=EventRegistration.Status.WAITLIST
+            ).count(),
+        }
         return context
 
 

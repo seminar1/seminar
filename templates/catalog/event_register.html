@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заявка на «{{ event.title }}» — Научный Центр МУИВ им. С.Ю. Витте{% endblock %}
+
+{% block meta_description %}Подайте заявку на участие в научном мероприятии «{{ event.title }}» в электронном каталоге МУИВ им. С.Ю. Витте.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/registration.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="reg-page">
+    <div class="container reg-page__inner">
+        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+            <a href="{% url 'catalog:landing' %}">Главная</a>
+            <i class="bi bi-chevron-right"></i>
+            <a href="{% url 'catalog:events' %}">Каталог мероприятий</a>
+            <i class="bi bi-chevron-right"></i>
+            <a href="{% url 'catalog:event_detail' event.slug %}">{{ event.title|truncatechars:32 }}</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Заявка на участие</span>
+        </nav>
+
+        <div class="reg-layout">
+            <div class="reg-form-card">
+                <header class="reg-form-card__header">
+                    <span class="reg-form-card__eyebrow">
+                        <i class="bi bi-person-plus"></i>
+                        Подача заявки
+                    </span>
+                    <h1 class="reg-form-card__title">Заявка на участие в мероприятии</h1>
+                    <p class="reg-form-card__lead">
+                        Проверьте контактные данные — они будут переданы
+                        организаторам для связи. При необходимости оставьте
+                        комментарий.
+                    </p>
+                </header>
+
+                {% if form.non_field_errors %}
+                    <div class="auth-alert auth-alert--error">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <div>
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <form method="post" class="reg-form" novalidate>
+                    {% csrf_token %}
+
+                    <div class="reg-form__field">
+                        <label for="{{ form.full_name.id_for_label }}" class="reg-form__label">
+                            {{ form.full_name.label }}<span class="reg-form__required">*</span>
+                        </label>
+                        {{ form.full_name }}
+                        {% if form.full_name.errors %}
+                            <div class="reg-form__error">
+                                {% for error in form.full_name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="reg-form__grid">
+                        <div class="reg-form__field">
+                            <label for="{{ form.email.id_for_label }}" class="reg-form__label">
+                                {{ form.email.label }}<span class="reg-form__required">*</span>
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="reg-form__error">
+                                    {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="reg-form__field">
+                            <label for="{{ form.phone.id_for_label }}" class="reg-form__label">
+                                {{ form.phone.label }}
+                            </label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <div class="reg-form__error">
+                                    {% for error in form.phone.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="reg-form__grid">
+                        <div class="reg-form__field">
+                            <label for="{{ form.organization.id_for_label }}" class="reg-form__label">
+                                {{ form.organization.label }}
+                            </label>
+                            {{ form.organization }}
+                            {% if form.organization.errors %}
+                                <div class="reg-form__error">
+                                    {% for error in form.organization.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="reg-form__field">
+                            <label for="{{ form.position.id_for_label }}" class="reg-form__label">
+                                {{ form.position.label }}
+                            </label>
+                            {{ form.position }}
+                            {% if form.position.errors %}
+                                <div class="reg-form__error">
+                                    {% for error in form.position.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="reg-form__field">
+                        <label for="{{ form.note.id_for_label }}" class="reg-form__label">
+                            {{ form.note.label }}
+                        </label>
+                        {{ form.note }}
+                        {% if form.note.errors %}
+                            <div class="reg-form__error">
+                                {% for error in form.note.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="reg-form__actions">
+                        <button type="submit" class="btn btn--primary btn--lg">
+                            <i class="bi bi-check2-circle"></i>
+                            {% if event.is_full and event.allow_waitlist %}
+                                Встать в лист ожидания
+                            {% elif event.requires_approval %}
+                                Отправить заявку
+                            {% else %}
+                                Подать заявку
+                            {% endif %}
+                        </button>
+                        <a href="{% url 'catalog:event_detail' event.slug %}" class="btn btn--ghost btn--lg">
+                            Отмена
+                        </a>
+                    </div>
+
+                    <p class="reg-form__note">
+                        <i class="bi bi-info-circle"></i>
+                        {% if event.requires_approval %}
+                            Заявки на это мероприятие подтверждаются куратором.
+                            После отправки статус появится в разделе «Мои заявки».
+                        {% elif event.is_full and event.allow_waitlist %}
+                            Все места заняты — вы попадёте в лист ожидания и
+                            получите уведомление, как только появится место.
+                        {% else %}
+                            Регистрация произойдёт сразу. Перед мероприятием
+                            мы пришлём напоминание на указанный email.
+                        {% endif %}
+                    </p>
+                </form>
+            </div>
+
+            <aside class="reg-summary">
+                <div class="reg-summary__tag">
+                    <i class="bi {{ event.event_type.icon|default:'bi-calendar2-event' }}"></i>
+                    {{ event.event_type.title }}
+                </div>
+                <h2 class="reg-summary__title">{{ event.title }}</h2>
+                {% if event.short_description %}
+                    <p class="reg-summary__lead">{{ event.short_description|truncatewords:30 }}</p>
+                {% endif %}
+
+                <ul class="reg-summary__meta">
+                    <li>
+                        <i class="bi bi-calendar3"></i>
+                        <span>{{ event.date_full }}</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-clock"></i>
+                        <span>{{ event.time_range }}</span>
+                    </li>
+                    {% if event.location %}
+                        <li>
+                            <i class="bi bi-geo-alt"></i>
+                            <span>{{ event.location }}</span>
+                        </li>
+                    {% endif %}
+                    <li>
+                        <i class="bi bi-display"></i>
+                        <span>{{ event.get_event_format_display }}</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-bookmark"></i>
+                        <span>{{ event.direction.title }}</span>
+                    </li>
+                </ul>
+
+                {% if event.seats_total > 0 %}
+                    <div class="reg-summary__seats">
+                        <div class="reg-summary__seats-info">
+                            <span>Занято мест</span>
+                            <strong>{{ event.seats_taken }}/{{ event.seats_total }}</strong>
+                        </div>
+                        <div class="reg-summary__progress">
+                            <span class="reg-summary__progress-bar" style="width: {{ event.seats_percent }}%;"></span>
+                        </div>
+                    </div>
+                {% endif %}
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}
