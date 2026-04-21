@@ -46,17 +46,6 @@
                 </p>
             </header>
 
-            {% if messages %}
-                <div class="auth-messages">
-                    {% for message in messages %}
-                        <div class="auth-alert auth-alert--{{ message.tags|default:'info' }}">
-                            <i class="bi bi-info-circle"></i>
-                            <span>{{ message }}</span>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-
             {% if form.non_field_errors %}
                 <div class="auth-alert auth-alert--error">
                     <i class="bi bi-exclamation-triangle"></i>

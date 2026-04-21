@@ -36,10 +36,6 @@ class RegisterView(CreateView):
         """Сохраняет пользователя и сразу же авторизует его."""
         response = super().form_valid(form)
         login(self.request, self.object)
-        messages.success(
-            self.request,
-            f'Добро пожаловать, {self.object.get_full_name() or self.object.username}!',
-        )
         return response
 
 
@@ -55,16 +51,6 @@ class UserLoginView(LoginView):
         next_url = self.get_redirect_url()
         return next_url or reverse_lazy('catalog:landing')
 
-    def form_valid(self, form):
-        """Добавляет приветственное сообщение после успешного входа."""
-        response = super().form_valid(form)
-        user = form.get_user()
-        messages.success(
-            self.request,
-            f'С возвращением, {user.get_full_name() or user.username}!',
-        )
-        return response
-
 
 class LogoutView(View):
     """Выход пользователя из сеанса."""
@@ -72,7 +58,6 @@ class LogoutView(View):
     def post(self, request, *args, **kwargs):
         """Завершает сессию и возвращает на главную страницу."""
         logout(request)
-        messages.info(request, 'Вы вышли из аккаунта.')
         return redirect('catalog:landing')
 
     def get(self, request, *args, **kwargs):

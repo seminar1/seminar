@@ -165,51 +165,6 @@
 }
 
 
-.auth-messages {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.auth-alert {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 14px 16px;
-    border-radius: var(--radius-md);
-    background: var(--color-surface-alt);
-    color: var(--color-text);
-    font-size: 14px;
-    border: 1px solid var(--color-border);
-    margin-bottom: 16px;
-}
-
-.auth-alert i {
-    font-size: 18px;
-    line-height: 1;
-    margin-top: 2px;
-}
-
-.auth-alert--success {
-    background: rgba(25, 195, 125, 0.08);
-    border-color: rgba(25, 195, 125, 0.3);
-    color: #0f7a4b;
-}
-
-.auth-alert--error {
-    background: rgba(255, 68, 92, 0.08);
-    border-color: rgba(255, 68, 92, 0.3);
-    color: #c3223a;
-}
-
-.auth-alert--info {
-    background: var(--color-primary-soft);
-    border-color: rgba(41, 72, 255, 0.22);
-    color: var(--color-primary-dark);
-}
-
-
 .auth-form {
     display: flex;
     flex-direction: column;

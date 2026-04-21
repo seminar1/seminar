@@ -33,17 +33,6 @@
             </div>
         </header>
 
-        {% if messages %}
-            <div class="admin-messages">
-                {% for message in messages %}
-                    <div class="auth-alert auth-alert--{{ message.tags|default:'info' }}">
-                        <i class="bi bi-info-circle"></i>
-                        <span>{{ message }}</span>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-
         <div class="admin-stats">
             <div class="admin-stat">
                 <div class="admin-stat__value">{{ total_count }}</div>

@@ -220,8 +220,7 @@
 
 .admin-table__email {
     color: var(--color-text-muted);
-    font-family: 'JetBrains Mono', 'Courier New', monospace;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .admin-table__date {
