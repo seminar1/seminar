@@ -1,10 +1,16 @@
 """Представления приложения catalog."""
 from django.contrib import messages
-from django.db.models import Count, ProtectedError
+from django.db.models import Count, ProtectedError, Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, ListView, TemplateView, View
+from django.views.generic import (
+    CreateView,
+    DetailView,
+    ListView,
+    TemplateView,
+    View,
+)
 
 from catalog.forms import DirectionForm, EventForm, EventTypeForm
 from catalog.models import Direction, Event, EventType
@@ -57,6 +63,56 @@ class EventsView(TemplateView):
             .filter(status=Event.Status.PUBLISHED)
             .select_related('direction', 'event_type')
             .order_by('starts_at')
+        )
+        return context
+
+
+class EventDetailView(DetailView):
+    """Детальная страница научного мероприятия.
+
+    Черновики и отменённые события скрыты от обычных пользователей;
+    их могут открывать только кураторы и администраторы (например,
+    чтобы проверить карточку перед публикацией).
+    """
+
+    model = Event
+    template_name = 'catalog/event_detail.html'
+    context_object_name = 'event'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
+
+    def get_queryset(self):
+        """Возвращает выборку, учитывающую права текущего пользователя."""
+        queryset = (
+            Event.objects
+            .select_related('direction', 'event_type', 'organizer')
+        )
+        user = self.request.user
+        if user.is_authenticated and (
+            getattr(user, 'is_curator', False)
+            or getattr(user, 'is_administrator', False)
+        ):
+            return queryset
+        return queryset.filter(
+            status__in=[
+                Event.Status.PUBLISHED,
+                Event.Status.COMPLETED,
+            ]
+        )
+
+    def get_context_data(self, **kwargs):
+        """Добавляет похожие мероприятия того же направления."""
+        context = super().get_context_data(**kwargs)
+        event = self.object
+        context['related_events'] = (
+            Event.objects
+            .filter(
+                Q(direction=event.direction) | Q(event_type=event.event_type)
+            )
+            .filter(status=Event.Status.PUBLISHED)
+            .exclude(pk=event.pk)
+            .select_related('direction', 'event_type')
+            .order_by('starts_at')[:3]
         )
         return context
 

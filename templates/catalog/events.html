@@ -165,12 +165,12 @@
                             В лист ожидания
                         </button>
                         {% else %}
-                        <a href="#" class="btn btn--primary">
+                        <a href="{% url 'catalog:event_detail' event.slug %}" class="btn btn--primary">
                             <i class="bi bi-person-plus"></i>
                             Подать заявку
                         </a>
                         {% endif %}
-                        <a href="#" class="event-item__link">
+                        <a href="{% url 'catalog:event_detail' event.slug %}" class="event-item__link">
                             Подробнее <i class="bi bi-arrow-right"></i>
                         </a>
                     </div>

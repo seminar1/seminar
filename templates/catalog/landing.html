@@ -200,7 +200,7 @@
                         <i class="bi bi-people"></i> {{ event.seats_total }} мест
                         {% endif %}
                     </p>
-                    <a href="{% url 'catalog:events' %}" class="event-card__link">
+                    <a href="{% url 'catalog:event_detail' event.slug %}" class="event-card__link">
                         {% if event.is_full %}В лист ожидания{% else %}Регистрация{% endif %}
                         <i class="bi bi-arrow-up-right"></i>
                     </a>

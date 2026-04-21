@@ -6,6 +6,7 @@ from catalog.views import (
     ContactsView,
     CuratorEventCreateView,
     CuratorEventsView,
+    EventDetailView,
     EventsView,
     FaqView,
     LandingView,
@@ -16,6 +17,11 @@ app_name = 'catalog'
 urlpatterns = [
     path('', LandingView.as_view(), name='landing'),
     path('events/', EventsView.as_view(), name='events'),
+    path(
+        'events/<slug:slug>/',
+        EventDetailView.as_view(),
+        name='event_detail',
+    ),
     path('about/', AboutView.as_view(), name='about'),
     path('faq/', FaqView.as_view(), name='faq'),
     path('contacts/', ContactsView.as_view(), name='contacts'),
