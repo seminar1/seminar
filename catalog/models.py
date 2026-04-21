@@ -1,11 +1,15 @@
 """Модели приложения catalog.
 
 Определяют структуру данных для электронного каталога научных
-мероприятий: справочники (научные направления, типы событий)
-и основную сущность `Event` с регистрациями участников.
+мероприятий: справочники (научные направления, типы событий),
+основную сущность ``Event`` и систему регистраций участников
+``EventRegistration`` со снимком контактных данных, управлением
+листом ожидания и отслеживанием жизненного цикла заявки.
 """
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 from django.utils.text import slugify
 
 RU_MONTHS_SHORT = [
@@ -147,6 +151,38 @@ class Event(models.Model):
         help_text='0 — без ограничения по количеству участников.',
     )
 
+    registration_opens_at = models.DateTimeField(
+        'Старт приёма заявок',
+        blank=True,
+        null=True,
+        help_text=(
+            'Если не заполнено, заявки принимаются сразу после '
+            'публикации мероприятия.'
+        ),
+    )
+    registration_closes_at = models.DateTimeField(
+        'Окончание приёма заявок',
+        blank=True,
+        null=True,
+        help_text=(
+            'Если не заполнено, заявки принимаются до момента начала '
+            'мероприятия.'
+        ),
+    )
+    requires_approval = models.BooleanField(
+        'Требуется подтверждение куратора',
+        default=False,
+        help_text=(
+            'Новые заявки получают статус «Ожидает подтверждения» и '
+            'подтверждаются куратором вручную.'
+        ),
+    )
+    allow_waitlist = models.BooleanField(
+        'Разрешить лист ожидания',
+        default=True,
+        help_text='Если мест нет, новые заявки попадают в лист ожидания.',
+    )
+
     cover = models.ImageField(
         'Обложка',
         upload_to='events/covers/%Y/%m/',
@@ -206,6 +242,20 @@ class Event(models.Model):
         ).count()
 
     @property
+    def pending_count(self):
+        """Количество заявок, ожидающих подтверждения куратором."""
+        return self.registrations.filter(
+            status=EventRegistration.Status.PENDING
+        ).count()
+
+    @property
+    def waitlist_count(self):
+        """Количество заявок в листе ожидания."""
+        return self.registrations.filter(
+            status=EventRegistration.Status.WAITLIST
+        ).count()
+
+    @property
     def seats_available(self):
         """Количество свободных мест, либо None, если лимита нет."""
         if self.seats_total == 0:
@@ -218,9 +268,34 @@ class Event(models.Model):
         return self.seats_total > 0 and self.seats_available == 0
 
     @property
+    def is_registration_time_active(self):
+        """Находится ли текущий момент внутри окна приёма заявок.
+
+        Границы окна необязательные: отсутствие ``registration_opens_at``
+        означает «принимаем сразу», а отсутствие ``registration_closes_at``
+        — «принимаем до начала мероприятия».
+        """
+        now = timezone.now()
+        if self.registration_opens_at and now < self.registration_opens_at:
+            return False
+        upper_bound = self.registration_closes_at or self.starts_at
+        return now < upper_bound
+
+    @property
     def is_registration_open(self):
-        """Доступна ли регистрация на мероприятие."""
-        return self.status == self.Status.PUBLISHED and not self.is_full
+        """Доступен ли приём заявок на участие в мероприятии.
+
+        Учитывает статус мероприятия, наличие свободных мест
+        (либо возможность попасть в лист ожидания) и временное окно
+        приёма заявок.
+        """
+        if self.status != self.Status.PUBLISHED:
+            return False
+        if not self.is_registration_time_active:
+            return False
+        if self.is_full and not self.allow_waitlist:
+            return False
+        return True
 
     @property
     def date_day(self):
@@ -275,18 +350,93 @@ class Event(models.Model):
             return 0
         return min(int(round(self.seats_taken * 100 / self.seats_total)), 100)
 
+    def clean(self):
+        """Проверяет согласованность полей регистрационного окна."""
+        super().clean()
+        if (
+            self.registration_opens_at
+            and self.registration_closes_at
+            and self.registration_opens_at >= self.registration_closes_at
+        ):
+            raise ValidationError({
+                'registration_closes_at': (
+                    'Окончание приёма заявок должно быть позже их старта.'
+                ),
+            })
+        if self.registration_closes_at and self.registration_closes_at > self.starts_at:
+            raise ValidationError({
+                'registration_closes_at': (
+                    'Приём заявок не может завершаться позже начала '
+                    'мероприятия.'
+                ),
+            })
+
+    def can_user_register(self, user):
+        """Может ли указанный пользователь подать заявку на участие.
+
+        Возвращает ``True`` только если регистрация в принципе открыта
+        (см. ``is_registration_open``) и у пользователя нет активной
+        заявки на это мероприятие.
+        """
+        if not user or not user.is_authenticated:
+            return False
+        if not self.is_registration_open:
+            return False
+        return not self.registrations.filter(
+            user=user,
+            status__in=EventRegistration.ACTIVE_STATUSES,
+        ).exists()
+
+    def get_user_registration(self, user):
+        """Возвращает последнюю заявку пользователя на это мероприятие.
+
+        Если заявок нет — ``None``. Используется для отображения текущего
+        статуса пользователя в карточке мероприятия.
+        """
+        if not user or not user.is_authenticated:
+            return None
+        return (
+            self.registrations
+            .filter(user=user)
+            .order_by('-created_at')
+            .first()
+        )
+
 
 class EventRegistration(models.Model):
-    """Заявка пользователя на участие в мероприятии."""
+    """Заявка пользователя на участие в научном мероприятии.
+
+    Помимо связи «мероприятие — участник», хранит снимок контактных
+    данных участника на момент подачи заявки (поля профиля могут
+    измениться позже), признаки жизненного цикла (подтверждение,
+    отмена, причина) и позицию в листе ожидания.
+    """
 
     class Status(models.TextChoices):
         """Статус заявки участника."""
 
         PENDING = 'pending', 'Ожидает подтверждения'
         CONFIRMED = 'confirmed', 'Подтверждена'
-        CANCELLED = 'cancelled', 'Отменена'
         WAITLIST = 'waitlist', 'Лист ожидания'
+        CANCELLED = 'cancelled', 'Отменена'
         ATTENDED = 'attended', 'Посетил(а)'
+        NO_SHOW = 'no_show', 'Не явился'
+
+    class Source(models.TextChoices):
+        """Способ создания заявки."""
+
+        SELF = 'self', 'Самостоятельно'
+        CURATOR = 'curator', 'Добавлен куратором'
+        IMPORT = 'import', 'Импорт'
+
+    #: Статусы, при которых заявка считается «живой» (занимает слот
+    #: или место в листе ожидания). Используется при проверке повторной
+    #: регистрации одного и того же пользователя на одно мероприятие.
+    ACTIVE_STATUSES = (
+        Status.PENDING,
+        Status.CONFIRMED,
+        Status.WAITLIST,
+    )
 
     event = models.ForeignKey(
         Event,
@@ -307,10 +457,78 @@ class EventRegistration(models.Model):
         choices=Status.choices,
         default=Status.PENDING,
     )
+    source = models.CharField(
+        'Источник заявки',
+        max_length=20,
+        choices=Source.choices,
+        default=Source.SELF,
+    )
+
+    full_name = models.CharField(
+        'ФИО участника',
+        max_length=255,
+        blank=True,
+        help_text='Снимок ФИО на момент подачи заявки.',
+    )
+    email = models.EmailField(
+        'Email для связи',
+        blank=True,
+        help_text='Контактный email, указанный в заявке.',
+    )
+    phone = models.CharField(
+        'Телефон',
+        max_length=32,
+        blank=True,
+    )
+    organization = models.CharField(
+        'Организация / подразделение',
+        max_length=255,
+        blank=True,
+    )
+    position = models.CharField(
+        'Должность / статус',
+        max_length=255,
+        blank=True,
+    )
+
     note = models.TextField(
         'Комментарий участника',
         blank=True,
         help_text='Дополнительная информация от участника (опционально).',
+    )
+
+    waitlist_position = models.PositiveIntegerField(
+        'Позиция в листе ожидания',
+        blank=True,
+        null=True,
+        help_text=(
+            'Заполняется автоматически при постановке заявки в лист '
+            'ожидания. Меньшее значение — ближе к подтверждению.'
+        ),
+    )
+
+    confirmed_at = models.DateTimeField(
+        'Подтверждено',
+        blank=True,
+        null=True,
+    )
+    cancelled_at = models.DateTimeField(
+        'Отменено',
+        blank=True,
+        null=True,
+    )
+    cancellation_reason = models.TextField(
+        'Причина отмены',
+        blank=True,
+    )
+    cancelled_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Кем отменена',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='cancelled_event_registrations',
+        help_text='Пользователь, отменивший заявку (участник или куратор).',
     )
 
     created_at = models.DateTimeField('Создано', auto_now_add=True)
@@ -323,13 +541,111 @@ class EventRegistration(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['event', 'user'],
-                name='unique_event_user_registration',
+                condition=models.Q(
+                    status__in=['pending', 'confirmed', 'waitlist']
+                ),
+                name='unique_active_event_user_registration',
             ),
         ]
         indexes = [
             models.Index(fields=['event', 'status']),
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['event', 'waitlist_position']),
         ]
 
     def __str__(self):
         """Возвращает строку вида «Участник → Мероприятие»."""
         return f'{self.user} → {self.event}'
+
+    @property
+    def is_active(self):
+        """Заявка в активном (не отменённом, не исторически-закрытом) статусе."""
+        return self.status in self.ACTIVE_STATUSES
+
+    @property
+    def is_cancelled(self):
+        """Заявка отменена."""
+        return self.status == self.Status.CANCELLED
+
+    @property
+    def is_waitlisted(self):
+        """Заявка в листе ожидания."""
+        return self.status == self.Status.WAITLIST
+
+    @property
+    def display_full_name(self):
+        """ФИО участника с резервным значением из профиля пользователя."""
+        if self.full_name:
+            return self.full_name
+        if self.user_id:
+            return self.user.get_full_name() or self.user.username
+        return ''
+
+    def populate_snapshot_from_user(self, overwrite=False):
+        """Копирует контактные данные из профиля пользователя в заявку.
+
+        Если ``overwrite=False`` (по умолчанию) заполняются только пустые
+        поля — так можно безопасно вызывать метод при сохранении формы,
+        не теряя уже введённые участником значения.
+        """
+        if not self.user_id:
+            return
+        user = self.user
+        defaults = {
+            'full_name': user.get_full_name() or user.username,
+            'email': user.email or '',
+            'phone': getattr(user, 'phone', '') or '',
+            'organization': getattr(user, 'organization', '') or '',
+            'position': getattr(user, 'position', '') or '',
+        }
+        for field, value in defaults.items():
+            if overwrite or not getattr(self, field, ''):
+                setattr(self, field, value)
+
+    def mark_confirmed(self, *, save=True):
+        """Переводит заявку в подтверждённый статус и фиксирует момент."""
+        self.status = self.Status.CONFIRMED
+        self.confirmed_at = timezone.now()
+        self.waitlist_position = None
+        if save:
+            self.save(update_fields=[
+                'status',
+                'confirmed_at',
+                'waitlist_position',
+                'updated_at',
+            ])
+
+    def mark_cancelled(self, *, by=None, reason='', save=True):
+        """Отменяет заявку, сохраняя инициатора и причину отмены."""
+        self.status = self.Status.CANCELLED
+        self.cancelled_at = timezone.now()
+        self.cancellation_reason = reason or ''
+        if by is not None and getattr(by, 'is_authenticated', False):
+            self.cancelled_by = by
+        self.waitlist_position = None
+        if save:
+            self.save(update_fields=[
+                'status',
+                'cancelled_at',
+                'cancellation_reason',
+                'cancelled_by',
+                'waitlist_position',
+                'updated_at',
+            ])
+
+    def place_on_waitlist(self, *, save=True):
+        """Ставит заявку в конец листа ожидания мероприятия."""
+        last_position = (
+            self.event.registrations
+            .filter(status=self.Status.WAITLIST)
+            .exclude(pk=self.pk)
+            .aggregate(models.Max('waitlist_position'))['waitlist_position__max']
+        )
+        self.status = self.Status.WAITLIST
+        self.waitlist_position = (last_position or 0) + 1
+        if save:
+            self.save(update_fields=[
+                'status',
+                'waitlist_position',
+                'updated_at',
+            ])
