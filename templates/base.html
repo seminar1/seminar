@@ -43,7 +43,7 @@
                     <div class="user-menu" id="userMenu">
                         <button type="button" class="btn btn--ghost user-menu__trigger" id="userMenuTrigger" aria-haspopup="true" aria-expanded="false">
                             <i class="bi bi-person-circle"></i>
-                            <span class="user-menu__name">{{ user.get_full_name|default:user.username }}</span>
+                            <span class="user-menu__name">{{ user.first_name|default:user.username }}</span>
                             <i class="bi bi-chevron-down user-menu__chevron"></i>
                         </button>
                         <div class="user-menu__dropdown" id="userMenuDropdown" role="menu">
@@ -51,7 +51,10 @@
                                 <div class="user-menu__avatar">{{ user.username|slice:":1"|upper }}</div>
                                 <div class="user-menu__info">
                                     <div class="user-menu__fullname">{{ user.get_full_name|default:user.username }}</div>
-                                    <div class="user-menu__email">{{ user.email|default:user.username }}</div>
+                                    <div class="user-menu__login">@{{ user.username }}</div>
+                                    {% if user.email %}
+                                        <div class="user-menu__email">{{ user.email }}</div>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="user-menu__divider"></div>

@@ -403,6 +403,16 @@ ul {
     text-overflow: ellipsis;
 }
 
+.user-menu__login {
+    font-size: 12px;
+    color: var(--color-primary-dark);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
 .user-menu__email {
     font-size: 12px;
     color: var(--color-text-muted);
