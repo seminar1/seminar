@@ -2,11 +2,15 @@
 from django.urls import path
 
 from catalog.views import (
+    AdminEventsReportExcelView,
     AdminFeedbackMessageDetailView,
     AdminFeedbackMessagesView,
     AdminFeedbackTopicDeleteView,
     AdminFeedbackTopicsView,
     AdminFeedbackTopicUpdateView,
+    AdminRegistrationsReportExcelView,
+    AdminReportsView,
+    AdminSummaryReportExcelView,
 )
 from users.views import (
     AdminUserRoleUpdateView,
@@ -54,5 +58,25 @@ urlpatterns = [
         'admin/feedback/<int:pk>/',
         AdminFeedbackMessageDetailView.as_view(),
         name='admin_feedback_message_detail',
+    ),
+    path(
+        'admin/reports/',
+        AdminReportsView.as_view(),
+        name='admin_reports',
+    ),
+    path(
+        'admin/reports/events.xlsx',
+        AdminEventsReportExcelView.as_view(),
+        name='admin_report_events_xlsx',
+    ),
+    path(
+        'admin/reports/registrations.xlsx',
+        AdminRegistrationsReportExcelView.as_view(),
+        name='admin_report_registrations_xlsx',
+    ),
+    path(
+        'admin/reports/summary.xlsx',
+        AdminSummaryReportExcelView.as_view(),
+        name='admin_report_summary_xlsx',
     ),
 ]

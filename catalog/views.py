@@ -1,9 +1,11 @@
 """Представления приложения catalog."""
+from io import BytesIO
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models import Count, Max, ProtectedError, Q
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -15,6 +17,8 @@ from django.views.generic import (
     TemplateView,
     View,
 )
+
+from catalog import reports as report_builders
 
 from catalog.forms import (
     AdminFeedbackMessageStatusForm,
@@ -1731,3 +1735,97 @@ class AdminFeedbackMessageDetailView(AdminRequiredMixin, View):
             self.template_name,
             self._build_context(feedback, status_form),
         )
+
+
+class AdminReportsView(AdminRequiredMixin, TemplateView):
+    """Страница админ-панели со ссылками на выгрузку отчётов в Excel.
+
+    Выводит сводные цифры по системе (мероприятия / регистрации /
+    участники) и три кнопки для скачивания XLSX-отчётов:
+    по мероприятиям, по регистрациям и «всё в одном».
+    """
+
+    template_name = 'catalog/admin/reports.html'
+
+    def get_context_data(self, **kwargs):
+        """Добавляет агрегированные показатели для превью на странице."""
+        context = super().get_context_data(**kwargs)
+        context['active_tab'] = 'reports'
+
+        context['events_total'] = Event.objects.count()
+        context['events_published'] = Event.objects.filter(
+            status=Event.Status.PUBLISHED
+        ).count()
+        context['events_completed'] = Event.objects.filter(
+            status=Event.Status.COMPLETED
+        ).count()
+
+        context['registrations_total'] = EventRegistration.objects.count()
+        context['registrations_confirmed'] = EventRegistration.objects.filter(
+            status=EventRegistration.Status.CONFIRMED
+        ).count()
+        context['registrations_pending'] = EventRegistration.objects.filter(
+            status=EventRegistration.Status.PENDING
+        ).count()
+        context['registrations_waitlist'] = EventRegistration.objects.filter(
+            status=EventRegistration.Status.WAITLIST
+        ).count()
+
+        context['participants_unique'] = (
+            EventRegistration.objects.values('user_id').distinct().count()
+        )
+        context['directions_total'] = Direction.objects.count()
+        context['event_types_total'] = EventType.objects.count()
+
+        return context
+
+
+XLSX_CONTENT_TYPE = (
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+)
+
+
+def _workbook_response(workbook, filename: str) -> HttpResponse:
+    """Сериализует ``openpyxl.Workbook`` в HTTP-ответ с XLSX-вложением."""
+    buffer = BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+    response = HttpResponse(buffer.read(), content_type=XLSX_CONTENT_TYPE)
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+class AdminEventsReportExcelView(AdminRequiredMixin, View):
+    """Выгружает XLSX-отчёт по мероприятиям (с показателями по регистрациям)."""
+
+    http_method_names = ['get']
+
+    def get(self, request, *args, **kwargs):
+        """Возвращает сгенерированный Excel-файл как attachment."""
+        workbook = report_builders.build_events_report()
+        filename = report_builders.build_filename('events_report')
+        return _workbook_response(workbook, filename)
+
+
+class AdminRegistrationsReportExcelView(AdminRequiredMixin, View):
+    """Выгружает XLSX-отчёт со всеми регистрациями пользователей."""
+
+    http_method_names = ['get']
+
+    def get(self, request, *args, **kwargs):
+        """Возвращает сгенерированный Excel-файл как attachment."""
+        workbook = report_builders.build_registrations_report()
+        filename = report_builders.build_filename('registrations_report')
+        return _workbook_response(workbook, filename)
+
+
+class AdminSummaryReportExcelView(AdminRequiredMixin, View):
+    """Выгружает сводный XLSX-отчёт с несколькими листами."""
+
+    http_method_names = ['get']
+
+    def get(self, request, *args, **kwargs):
+        """Возвращает сгенерированный Excel-файл как attachment."""
+        workbook = report_builders.build_summary_report()
+        filename = report_builders.build_filename('summary_report')
+        return _workbook_response(workbook, filename)

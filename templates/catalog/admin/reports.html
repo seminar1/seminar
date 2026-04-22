@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Статистика и отчёты — Админ-панель{% endblock %}
+
+{% block meta_description %}Выгрузка статистики мероприятий и регистраций в Excel (XLSX) в админ-панели электронного каталога МУИВ.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/curator.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="admin-page">
+    <div class="container">
+        <header class="admin-page__header">
+            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+                <a href="{% url 'catalog:landing' %}">Главная</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>Админ-панель</span>
+            </nav>
+            <div class="admin-page__titles">
+                <div>
+                    <span class="admin-page__eyebrow">
+                        <i class="bi bi-shield-lock"></i>
+                        Панель администратора
+                    </span>
+                    <h1 class="admin-page__title">Статистика и отчёты</h1>
+                    <p class="admin-page__lead">
+                        Сводные показатели системы и выгрузка данных
+                        в формате Excel (XLSX) — по мероприятиям,
+                        регистрациям или всё сразу.
+                    </p>
+                </div>
+            </div>
+            {% include 'users/admin/_tabs.html' with active_tab='reports' %}
+        </header>
+
+        <div class="admin-stats">
+            <div class="admin-stat">
+                <div class="admin-stat__value">{{ events_total }}</div>
+                <div class="admin-stat__label">Всего мероприятий</div>
+            </div>
+            <div class="admin-stat admin-stat--admin">
+                <div class="admin-stat__value">{{ events_published }}</div>
+                <div class="admin-stat__label">Опубликовано</div>
+            </div>
+            <div class="admin-stat admin-stat--user">
+                <div class="admin-stat__value">{{ events_completed }}</div>
+                <div class="admin-stat__label">Завершено</div>
+            </div>
+            <div class="admin-stat admin-stat--curator">
+                <div class="admin-stat__value">{{ registrations_total }}</div>
+                <div class="admin-stat__label">Всего заявок</div>
+            </div>
+        </div>
+
+        <div class="admin-stats">
+            <div class="admin-stat">
+                <div class="admin-stat__value">{{ registrations_confirmed }}</div>
+                <div class="admin-stat__label">Подтверждены</div>
+            </div>
+            <div class="admin-stat admin-stat--admin">
+                <div class="admin-stat__value">{{ registrations_pending }}</div>
+                <div class="admin-stat__label">Ожидают подтверждения</div>
+            </div>
+            <div class="admin-stat admin-stat--curator">
+                <div class="admin-stat__value">{{ registrations_waitlist }}</div>
+                <div class="admin-stat__label">В листе ожидания</div>
+            </div>
+            <div class="admin-stat admin-stat--user">
+                <div class="admin-stat__value">{{ participants_unique }}</div>
+                <div class="admin-stat__label">Уникальных участников</div>
+            </div>
+        </div>
+
+        <div class="reports-grid">
+            <article class="report-card">
+                <div class="report-card__icon report-card__icon--events">
+                    <i class="bi bi-calendar2-event"></i>
+                </div>
+                <div class="report-card__body">
+                    <h2 class="report-card__title">Мероприятия</h2>
+                    <p class="report-card__lead">
+                        Полный список мероприятий с направлением, типом,
+                        датой и детальной разбивкой по статусам регистраций
+                        (подтверждены, ожидают, лист ожидания, посетили и т.д.).
+                    </p>
+                    <ul class="report-card__meta">
+                        <li>
+                            <i class="bi bi-file-earmark-excel"></i>
+                            Формат: XLSX (Excel)
+                        </li>
+                        <li>
+                            <i class="bi bi-columns-gap"></i>
+                            Записей: {{ events_total }}
+                        </li>
+                    </ul>
+                </div>
+                <div class="report-card__actions">
+                    <a href="{% url 'users:admin_report_events_xlsx' %}"
+                       class="btn btn--primary">
+                        <i class="bi bi-download"></i>
+                        Скачать отчёт
+                    </a>
+                </div>
+            </article>
+
+            <article class="report-card">
+                <div class="report-card__icon report-card__icon--registrations">
+                    <i class="bi bi-person-check"></i>
+                </div>
+                <div class="report-card__body">
+                    <h2 class="report-card__title">Регистрации участников</h2>
+                    <p class="report-card__lead">
+                        Поимённый список всех заявок: участник, контакты,
+                        мероприятие, статус и даты жизненного цикла заявки
+                        (подана, подтверждена, отменена).
+                    </p>
+                    <ul class="report-card__meta">
+                        <li>
+                            <i class="bi bi-file-earmark-excel"></i>
+                            Формат: XLSX (Excel)
+                        </li>
+                        <li>
+                            <i class="bi bi-columns-gap"></i>
+                            Записей: {{ registrations_total }}
+                        </li>
+                    </ul>
+                </div>
+                <div class="report-card__actions">
+                    <a href="{% url 'users:admin_report_registrations_xlsx' %}"
+                       class="btn btn--primary">
+                        <i class="bi bi-download"></i>
+                        Скачать отчёт
+                    </a>
+                </div>
+            </article>
+
+            <article class="report-card report-card--featured">
+                <div class="report-card__icon report-card__icon--summary">
+                    <i class="bi bi-bar-chart-line"></i>
+                </div>
+                <div class="report-card__body">
+                    <h2 class="report-card__title">Сводный отчёт</h2>
+                    <p class="report-card__lead">
+                        Универсальный XLSX с несколькими листами: общая
+                        сводка, мероприятия, регистрации, разрезы по направлениям
+                        и типам, топ мероприятий по числу заявок.
+                    </p>
+                    <ul class="report-card__meta">
+                        <li>
+                            <i class="bi bi-file-earmark-excel"></i>
+                            Формат: XLSX (Excel), 6 листов
+                        </li>
+                        <li>
+                            <i class="bi bi-diagram-3"></i>
+                            Направлений: {{ directions_total }} · Типов: {{ event_types_total }}
+                        </li>
+                    </ul>
+                </div>
+                <div class="report-card__actions">
+                    <a href="{% url 'users:admin_report_summary_xlsx' %}"
+                       class="btn btn--primary">
+                        <i class="bi bi-download"></i>
+                        Скачать сводный отчёт
+                    </a>
+                </div>
+            </article>
+        </div>
+
+        <div class="reports-note">
+            <i class="bi bi-info-circle"></i>
+            <div>
+                <strong>Как читать отчёт.</strong>
+                Все файлы генерируются «на лету» по актуальным данным
+                базы. Даты указаны в локальной таймзоне сервера.
+                Для больших таблиц используйте фильтры и сводные таблицы
+                Excel для удобного анализа.
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

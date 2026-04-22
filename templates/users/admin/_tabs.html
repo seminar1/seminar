@@ -1,6 +1,7 @@
 {% comment %}
     Навигация по разделам админ-панели. Ожидает переменную ``active_tab``
-    со значением: 'users', 'feedback_topics' или 'feedback_messages'.
+    со значением: 'users', 'feedback_topics', 'feedback_messages' или
+    'reports'.
 {% endcomment %}
 <nav class="admin-tabs" aria-label="Разделы админ-панели">
     <a href="{% url 'users:admin_users' %}"
@@ -17,5 +18,10 @@
        class="admin-tabs__link {% if active_tab == 'feedback_messages' %}is-active{% endif %}">
         <i class="bi bi-chat-left-text"></i>
         Обратная связь
+    </a>
+    <a href="{% url 'users:admin_reports' %}"
+       class="admin-tabs__link {% if active_tab == 'reports' %}is-active{% endif %}">
+        <i class="bi bi-bar-chart"></i>
+        Статистика
     </a>
 </nav>
