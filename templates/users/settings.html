@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Настройки — Научный Центр МУИВ им. С.Ю. Витте{% endblock %}
+
+{% block meta_description %}Личные настройки учётной записи: редактирование профиля и смена пароля в электронном каталоге научных мероприятий МУИВ им. С.Ю. Витте.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+    <link rel="stylesheet" href="{% static 'css/settings.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/auth.js' %}" defer></script>
+    <script src="{% static 'js/settings.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+<section class="settings-page">
+    <div class="container">
+        <header class="settings-hero">
+            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+                <a href="{% url 'catalog:landing' %}">Главная</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>Настройки</span>
+            </nav>
+            <span class="settings-hero__eyebrow">
+                <i class="bi bi-gear"></i>
+                Личный кабинет
+            </span>
+            <h1 class="settings-hero__title">Настройки аккаунта</h1>
+            <p class="settings-hero__lead">
+                Редактируйте персональные данные и управляйте безопасностью
+                своей учётной записи.
+            </p>
+        </header>
+
+        <div class="settings-layout">
+            <aside class="settings-side">
+                <nav class="settings-nav" aria-label="Разделы настроек">
+                    <a href="#profile"
+                       class="settings-nav__link {% if active_section == 'profile' %}is-active{% endif %}"
+                       data-section="profile">
+                        <i class="bi bi-person"></i>
+                        <span>Профиль</span>
+                    </a>
+                    <a href="#password"
+                       class="settings-nav__link {% if active_section == 'password' %}is-active{% endif %}"
+                       data-section="password">
+                        <i class="bi bi-shield-lock"></i>
+                        <span>Пароль</span>
+                    </a>
+                </nav>
+
+                <article class="settings-account-card">
+                    <div class="settings-account-card__avatar">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                    <div class="settings-account-card__name">
+                        {{ user.get_full_name|default:user.username }}
+                    </div>
+                    <div class="settings-account-card__login">@{{ user.username }}</div>
+                    <span class="settings-role-badge settings-role-badge--{{ user.role }}">
+                        {% if user.is_administrator %}
+                            <i class="bi bi-shield-check"></i>
+                        {% elif user.is_curator %}
+                            <i class="bi bi-briefcase"></i>
+                        {% else %}
+                            <i class="bi bi-person"></i>
+                        {% endif %}
+                        {{ user.role_label }}
+                    </span>
+                    <dl class="settings-account-card__meta">
+                        {% if user.email %}
+                            <div>
+                                <dt>Email</dt>
+                                <dd>{{ user.email }}</dd>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <dt>В системе с</dt>
+                            <dd>{{ user.date_joined|date:"d.m.Y" }}</dd>
+                        </div>
+                        {% if user.last_login %}
+                            <div>
+                                <dt>Последний вход</dt>
+                                <dd>{{ user.last_login|date:"d.m.Y H:i" }}</dd>
+                            </div>
+                        {% endif %}
+                    </dl>
+                </article>
+            </aside>
+
+            <div class="settings-main">
+                <article id="profile" class="settings-card">
+                    <header class="settings-card__header">
+                        <div>
+                            <h2 class="settings-card__title">
+                                <i class="bi bi-person-badge"></i>
+                                Персональные данные
+                            </h2>
+                            <p class="settings-card__subtitle">
+                                Эти сведения отображаются в ваших заявках на
+                                мероприятия и используются организаторами для
+                                связи.
+                            </p>
+                        </div>
+                    </header>
+
+                    <form method="post" class="auth-form" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="form_name" value="profile">
+
+                        {% if profile_form.non_field_errors %}
+                            <div class="auth-alert auth-alert--error">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <div>
+                                    {% for error in profile_form.non_field_errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="auth-form__grid">
+                            <div class="auth-form__field">
+                                <label for="{{ profile_form.last_name.id_for_label }}" class="auth-form__label">
+                                    {{ profile_form.last_name.label }}
+                                </label>
+                                {{ profile_form.last_name }}
+                                {% if profile_form.last_name.errors %}
+                                    <div class="auth-form__error">{{ profile_form.last_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="auth-form__field">
+                                <label for="{{ profile_form.first_name.id_for_label }}" class="auth-form__label">
+                                    {{ profile_form.first_name.label }}
+                                </label>
+                                {{ profile_form.first_name }}
+                                {% if profile_form.first_name.errors %}
+                                    <div class="auth-form__error">{{ profile_form.first_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="auth-form__field">
+                            <label for="{{ profile_form.patronymic.id_for_label }}" class="auth-form__label">
+                                {{ profile_form.patronymic.label }}
+                            </label>
+                            {{ profile_form.patronymic }}
+                            {% if profile_form.patronymic.errors %}
+                                <div class="auth-form__error">{{ profile_form.patronymic.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="auth-form__field">
+                            <label for="{{ profile_form.email.id_for_label }}" class="auth-form__label">
+                                {{ profile_form.email.label }}
+                            </label>
+                            {{ profile_form.email }}
+                            {% if profile_form.email.errors %}
+                                <div class="auth-form__error">{{ profile_form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="auth-form__field">
+                            <label for="{{ profile_form.phone.id_for_label }}" class="auth-form__label">
+                                {{ profile_form.phone.label }}
+                            </label>
+                            {{ profile_form.phone }}
+                            {% if profile_form.phone.errors %}
+                                <div class="auth-form__error">{{ profile_form.phone.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="auth-form__grid">
+                            <div class="auth-form__field">
+                                <label for="{{ profile_form.organization.id_for_label }}" class="auth-form__label">
+                                    {{ profile_form.organization.label }}
+                                </label>
+                                {{ profile_form.organization }}
+                                {% if profile_form.organization.errors %}
+                                    <div class="auth-form__error">{{ profile_form.organization.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="auth-form__field">
+                                <label for="{{ profile_form.position.id_for_label }}" class="auth-form__label">
+                                    {{ profile_form.position.label }}
+                                </label>
+                                {{ profile_form.position }}
+                                {% if profile_form.position.errors %}
+                                    <div class="auth-form__error">{{ profile_form.position.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="settings-card__actions">
+                            <button type="submit" class="btn btn--primary btn--lg">
+                                <i class="bi bi-save"></i>
+                                Сохранить изменения
+                            </button>
+                        </div>
+                    </form>
+                </article>
+
+                <article id="password" class="settings-card">
+                    <header class="settings-card__header">
+                        <div>
+                            <h2 class="settings-card__title">
+                                <i class="bi bi-shield-lock"></i>
+                                Смена пароля
+                            </h2>
+                            <p class="settings-card__subtitle">
+                                Подтвердите текущий пароль и задайте новый.
+                                После смены вы останетесь в системе — повторный
+                                вход не потребуется.
+                            </p>
+                        </div>
+                    </header>
+
+                    <form method="post" class="auth-form" novalidate autocomplete="off">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_name" value="password">
+
+                        {% if password_form.non_field_errors %}
+                            <div class="auth-alert auth-alert--error">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <div>
+                                    {% for error in password_form.non_field_errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% include 'users/_password_field.html' with field=password_form.old_password %}
+
+                        <div class="auth-form__grid">
+                            {% include 'users/_password_field.html' with field=password_form.new_password1 %}
+                            {% include 'users/_password_field.html' with field=password_form.new_password2 %}
+                        </div>
+
+                        <div class="settings-password-tips">
+                            <div class="settings-password-tips__title">
+                                <i class="bi bi-info-circle"></i>
+                                Требования к паролю
+                            </div>
+                            <ul>
+                                <li>Минимум 8 символов.</li>
+                                <li>Не должен состоять только из цифр.</li>
+                                <li>Не должен быть слишком похож на ваши логин и e-mail.</li>
+                                <li>Не используйте типовые пароли (например, «qwerty», «password»).</li>
+                            </ul>
+                        </div>
+
+                        <div class="settings-card__actions">
+                            <button type="submit" class="btn btn--primary btn--lg">
+                                <i class="bi bi-key"></i>
+                                Сменить пароль
+                            </button>
+                        </div>
+                    </form>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

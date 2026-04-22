@@ -5,7 +5,11 @@
 """
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    PasswordChangeForm as DjangoPasswordChangeForm,
+    UserCreationForm,
+)
 
 User = get_user_model()
 
@@ -107,6 +111,93 @@ class LoginForm(StyledFormMixin, AuthenticationForm):
         label='Пароль',
         widget=forms.PasswordInput(attrs={'placeholder': '••••••••'}),
     )
+
+
+class ProfileUpdateForm(StyledFormMixin, forms.ModelForm):
+    """Форма редактирования персональных данных пользователя.
+
+    Используется на странице «Настройки» и позволяет обновить ФИО,
+    контактные данные и сведения об организации. Логин (``username``)
+    и роль недоступны для самостоятельного изменения — они управляются
+    только через админ-панель.
+    """
+
+    class Meta:
+        model = User
+        fields = (
+            'last_name',
+            'first_name',
+            'patronymic',
+            'email',
+            'phone',
+            'organization',
+            'position',
+        )
+        widgets = {
+            'last_name': forms.TextInput(attrs={'placeholder': 'Иванов'}),
+            'first_name': forms.TextInput(attrs={'placeholder': 'Иван'}),
+            'patronymic': forms.TextInput(attrs={'placeholder': 'Иванович'}),
+            'email': forms.EmailInput(
+                attrs={
+                    'placeholder': 'name@example.com',
+                    'autocomplete': 'email',
+                }
+            ),
+            'phone': forms.TextInput(
+                attrs={
+                    'placeholder': '+7 (999) 000-00-00',
+                    'autocomplete': 'tel',
+                }
+            ),
+            'organization': forms.TextInput(
+                attrs={'placeholder': 'МУИВ, факультет ИТ'}
+            ),
+            'position': forms.TextInput(
+                attrs={'placeholder': 'Студент, преподаватель…'}
+            ),
+        }
+
+    def clean_email(self):
+        """Проверяет уникальность e-mail среди прочих пользователей."""
+        email = self.cleaned_data.get('email', '').strip().lower()
+        if not email:
+            return email
+        qs = User.objects.filter(email__iexact=email)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError(
+                'Пользователь с таким e-mail уже зарегистрирован.'
+            )
+        return email
+
+
+class UserPasswordChangeForm(StyledFormMixin, DjangoPasswordChangeForm):
+    """Форма смены пароля на странице «Настройки».
+
+    Наследует стандартную проверку Django (старый пароль, правила
+    валидации нового пароля, совпадение повторов) и применяет единый
+    визуальный стиль ``auth-form__input`` ко всем полям.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['old_password'].widget.attrs.update({
+            'placeholder': 'Текущий пароль',
+            'autocomplete': 'current-password',
+        })
+        self.fields['new_password1'].widget.attrs.update({
+            'placeholder': 'Новый пароль',
+            'autocomplete': 'new-password',
+        })
+        self.fields['new_password2'].widget.attrs.update({
+            'placeholder': 'Повторите новый пароль',
+            'autocomplete': 'new-password',
+        })
+        self.fields['new_password1'].help_text = (
+            'Минимум 8 символов, не только цифры, не похож на логин или e-mail.'
+        )
+        self.fields['new_password2'].help_text = ''
 
 
 class UserRoleForm(forms.ModelForm):

@@ -1,14 +1,21 @@
 """Представления приложения users: регистрация, вход, выход и админ-панель."""
 from django.contrib import messages
-from django.contrib.auth import get_user_model, login, logout
+from django.contrib.auth import get_user_model, login, logout, update_session_auth_hash
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.db.models import Q
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, ListView, View
 
-from users.forms import LoginForm, RegisterForm, UserRoleForm
+from users.forms import (
+    LoginForm,
+    ProfileUpdateForm,
+    RegisterForm,
+    UserPasswordChangeForm,
+    UserRoleForm,
+)
 from users.mixins import AdminRequiredMixin
 
 User = get_user_model()
@@ -50,6 +57,104 @@ class UserLoginView(LoginView):
         """Возвращает URL, на который перенаправлять после входа."""
         next_url = self.get_redirect_url()
         return next_url or reverse_lazy('catalog:landing')
+
+
+class SettingsView(LoginRequiredMixin, View):
+    """Страница «Настройки» личного кабинета.
+
+    Доступна всем авторизованным пользователям. Содержит две формы:
+
+    1. ``ProfileUpdateForm`` — редактирование персональных данных
+       (ФИО, e-mail, телефон, организация, должность).
+    2. ``UserPasswordChangeForm`` — смена пароля с проверкой старого
+       пароля и стандартной валидацией нового пароля.
+
+    Какая именно форма обрабатывается, определяется скрытым полем
+    ``form_name`` в POST-запросе: ``profile`` или ``password``.
+    Остальная форма рендерится без изменений (pristine).
+    """
+
+    template_name = 'users/settings.html'
+    login_url = reverse_lazy('users:login')
+
+    def _build_context(self, profile_form, password_form, active_section='profile'):
+        """Формирует общий контекст шаблона для GET и POST."""
+        return {
+            'profile_form': profile_form,
+            'password_form': password_form,
+            'active_section': active_section,
+        }
+
+    def get(self, request, *args, **kwargs):
+        """Отображает формы профиля и смены пароля, предзаполненные данными."""
+        profile_form = ProfileUpdateForm(instance=request.user)
+        password_form = UserPasswordChangeForm(user=request.user)
+        return render(
+            request,
+            self.template_name,
+            self._build_context(profile_form, password_form),
+        )
+
+    def post(self, request, *args, **kwargs):
+        """Обрабатывает одну из двух форм в зависимости от поля ``form_name``."""
+        form_name = request.POST.get('form_name')
+
+        if form_name == 'password':
+            return self._handle_password(request)
+        return self._handle_profile(request)
+
+    def _handle_profile(self, request):
+        """Валидирует и сохраняет данные профиля."""
+        profile_form = ProfileUpdateForm(request.POST, instance=request.user)
+        password_form = UserPasswordChangeForm(user=request.user)
+
+        if profile_form.is_valid():
+            profile_form.save()
+            messages.success(
+                request,
+                'Данные профиля успешно обновлены.',
+            )
+            return redirect('users:settings')
+
+        messages.error(
+            request,
+            'Не удалось сохранить профиль: проверьте заполнение полей.',
+        )
+        return render(
+            request,
+            self.template_name,
+            self._build_context(
+                profile_form, password_form, active_section='profile'
+            ),
+        )
+
+    def _handle_password(self, request):
+        """Валидирует и сохраняет новый пароль, сохраняя сессию активной."""
+        profile_form = ProfileUpdateForm(instance=request.user)
+        password_form = UserPasswordChangeForm(
+            user=request.user, data=request.POST
+        )
+
+        if password_form.is_valid():
+            user = password_form.save()
+            update_session_auth_hash(request, user)
+            messages.success(
+                request,
+                'Пароль успешно изменён. Вы остаётесь в системе.',
+            )
+            return redirect('users:settings')
+
+        messages.error(
+            request,
+            'Не удалось сменить пароль: проверьте введённые данные.',
+        )
+        return render(
+            request,
+            self.template_name,
+            self._build_context(
+                profile_form, password_form, active_section='password'
+            ),
+        )
 
 
 class LogoutView(View):

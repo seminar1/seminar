@@ -63,6 +63,10 @@
                                 <i class="bi bi-journal-check"></i>
                                 Мои заявки
                             </a>
+                            <a class="user-menu__item" href="{% url 'users:settings' %}" role="menuitem">
+                                <i class="bi bi-gear"></i>
+                                Настройки
+                            </a>
                             {% if user.is_curator %}
                                 <a class="user-menu__item" href="{% url 'catalog:curator_events' %}" role="menuitem">
                                     <i class="bi bi-briefcase"></i>

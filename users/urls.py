@@ -19,6 +19,7 @@ from users.views import (
     AdminUsersView,
     LogoutView,
     RegisterView,
+    SettingsView,
     UserLoginView,
 )
 
@@ -28,6 +29,7 @@ urlpatterns = [
     path('login/', UserLoginView.as_view(), name='login'),
     path('register/', RegisterView.as_view(), name='register'),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('settings/', SettingsView.as_view(), name='settings'),
     path('admin/users/', AdminUsersView.as_view(), name='admin_users'),
     path(
         'admin/users/<int:pk>/role/',
