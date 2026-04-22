@@ -20,8 +20,15 @@ from catalog.forms import (
     EventForm,
     EventRegistrationForm,
     EventTypeForm,
+    FeedbackMessageForm,
 )
-from catalog.models import Direction, Event, EventRegistration, EventType
+from catalog.models import (
+    Direction,
+    Event,
+    EventRegistration,
+    EventType,
+    FeedbackTopic,
+)
 from users.mixins import AdminRequiredMixin, CuratorRequiredMixin
 
 
@@ -618,6 +625,118 @@ class ContactsView(TemplateView):
             },
         ]
         return context
+
+
+class FeedbackView(View):
+    """Публичная страница формы обратной связи.
+
+    Доступна всем пользователям без авторизации. При отправке
+    формы создаётся запись ``FeedbackMessage`` со снимком контактных
+    данных, выбранной темой обращения и технической метаинформацией
+    (IP-адрес, User-Agent, реферер). Для авторизованных пользователей
+    обращение связывается с их учётной записью.
+    """
+
+    template_name = 'catalog/feedback.html'
+
+    def _get_client_ip(self, request):
+        """Возвращает IP-адрес клиента с учётом прокси-заголовков."""
+        forwarded = request.META.get('HTTP_X_FORWARDED_FOR', '')
+        if forwarded:
+            return forwarded.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR') or None
+
+    def _build_context(self, request, form):
+        """Формирует общий контекст шаблона для GET и POST (с ошибками)."""
+        highlights = [
+            {
+                'icon': 'bi-lightning-charge',
+                'title': 'Ответ в течение 1–2 рабочих дней',
+                'text': (
+                    'Обращения обрабатываются в будние дни с 09:00 до 18:00. '
+                    'Мы стараемся отвечать как можно быстрее.'
+                ),
+            },
+            {
+                'icon': 'bi-shield-check',
+                'title': 'Конфиденциальность',
+                'text': (
+                    'Контактные данные используются исключительно для ответа '
+                    'на ваше обращение и не передаются третьим лицам.'
+                ),
+            },
+            {
+                'icon': 'bi-chat-left-text',
+                'title': 'Любой вопрос — без регистрации',
+                'text': (
+                    'Форма доступна всем: студентам, преподавателям, гостям '
+                    'сайта. Авторизация не требуется.'
+                ),
+            },
+        ]
+        contact_shortcuts = [
+            {
+                'icon': 'bi-envelope-at',
+                'label': 'Электронная почта',
+                'value': 'science@muiv.ru',
+                'href': 'mailto:science@muiv.ru',
+            },
+            {
+                'icon': 'bi-telephone',
+                'label': 'Телефон',
+                'value': '+7 (495) 500-03-63',
+                'href': 'tel:+74955000363',
+            },
+            {
+                'icon': 'bi-geo-alt',
+                'label': 'Адрес',
+                'value': 'Москва, 2-й Кожуховский проезд, д. 12, стр. 1',
+                'href': '{0}#map'.format(reverse('catalog:contacts')),
+            },
+        ]
+        return {
+            'form': form,
+            'highlights': highlights,
+            'contact_shortcuts': contact_shortcuts,
+            'topics': FeedbackTopic.objects.filter(is_active=True),
+        }
+
+    def get(self, request, *args, **kwargs):
+        """Отображает пустую форму обратной связи."""
+        user = request.user if request.user.is_authenticated else None
+        form = FeedbackMessageForm(user=user)
+        return render(request, self.template_name, self._build_context(request, form))
+
+    def post(self, request, *args, **kwargs):
+        """Валидирует форму, сохраняет обращение и перенаправляет пользователя."""
+        user = request.user if request.user.is_authenticated else None
+        form = FeedbackMessageForm(request.POST, user=user)
+
+        if not form.is_valid():
+            messages.error(
+                request,
+                'Не удалось отправить обращение: проверьте заполнение полей.',
+            )
+            return render(
+                request,
+                self.template_name,
+                self._build_context(request, form),
+            )
+
+        feedback = form.save(commit=False)
+        if user is not None:
+            feedback.user = user
+        feedback.ip_address = self._get_client_ip(request)
+        feedback.user_agent = request.META.get('HTTP_USER_AGENT', '')[:500]
+        feedback.referer = request.META.get('HTTP_REFERER', '')[:500]
+        feedback.save()
+
+        messages.success(
+            request,
+            'Спасибо! Ваше обращение отправлено — мы свяжемся с вами '
+            'по указанному email в ближайшее время.',
+        )
+        return redirect('catalog:feedback')
 
 
 class AboutView(TemplateView):

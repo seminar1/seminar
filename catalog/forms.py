@@ -1,7 +1,14 @@
 """Формы приложения catalog: управление мероприятиями и справочниками."""
 from django import forms
 
-from catalog.models import Direction, Event, EventRegistration, EventType
+from catalog.models import (
+    Direction,
+    Event,
+    EventRegistration,
+    EventType,
+    FeedbackMessage,
+    FeedbackTopic,
+)
 
 
 class DirectionForm(forms.ModelForm):
@@ -270,3 +277,128 @@ class EventRegistrationForm(forms.ModelForm):
             widget.attrs['class'] = (
                 f'{existing} {self.default_css_class}'.strip()
             )
+
+
+class FeedbackMessageForm(forms.ModelForm):
+    """Публичная форма обратной связи.
+
+    Доступна всем пользователям — как авторизованным, так и анонимным.
+    Для авторизованных пользователей поля ФИО и email предварительно
+    заполняются данными профиля. В момент отправки создаётся
+    ``FeedbackMessage``, связанный с учётной записью (если пользователь
+    авторизован), иначе — анонимное обращение.
+    """
+
+    default_css_class = 'feedback-form__input'
+
+    consent_to_processing = forms.BooleanField(
+        label=(
+            'Я согласен(на) на обработку персональных данных '
+            'в соответствии с политикой конфиденциальности.'
+        ),
+        required=True,
+        error_messages={
+            'required': (
+                'Для отправки обращения необходимо согласие '
+                'на обработку персональных данных.'
+            ),
+        },
+    )
+    subscribe_to_news = forms.BooleanField(
+        label='Хочу получать новостную рассылку о научных мероприятиях.',
+        required=False,
+    )
+
+    class Meta:
+        model = FeedbackMessage
+        fields = (
+            'topic',
+            'full_name',
+            'email',
+            'phone',
+            'organization',
+            'subject',
+            'message',
+            'consent_to_processing',
+            'subscribe_to_news',
+        )
+        widgets = {
+            'topic': forms.Select(),
+            'full_name': forms.TextInput(
+                attrs={
+                    'placeholder': 'Как к вам обращаться',
+                    'autocomplete': 'name',
+                }
+            ),
+            'email': forms.EmailInput(
+                attrs={
+                    'placeholder': 'you@example.com',
+                    'autocomplete': 'email',
+                }
+            ),
+            'phone': forms.TextInput(
+                attrs={
+                    'placeholder': '+7 (999) 000-00-00',
+                    'autocomplete': 'tel',
+                }
+            ),
+            'organization': forms.TextInput(
+                attrs={'placeholder': 'МУИВ, факультет / организация (необязательно)'}
+            ),
+            'subject': forms.TextInput(
+                attrs={'placeholder': 'Кратко о сути обращения'}
+            ),
+            'message': forms.Textarea(
+                attrs={
+                    'rows': 6,
+                    'placeholder': (
+                        'Опишите ваш вопрос, предложение или '
+                        'обратную связь как можно подробнее.'
+                    ),
+                }
+            ),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+        self.fields['topic'].queryset = FeedbackTopic.objects.filter(
+            is_active=True
+        )
+        self.fields['topic'].empty_label = 'Выберите тему обращения'
+        self.fields['topic'].required = False
+
+        self.fields['full_name'].required = True
+        self.fields['email'].required = True
+        self.fields['message'].required = True
+
+        if user is not None and user.is_authenticated and not self.is_bound:
+            self.fields['full_name'].initial = (
+                user.get_full_name() or user.username
+            )
+            self.fields['email'].initial = user.email or ''
+            self.fields['phone'].initial = getattr(user, 'phone', '') or ''
+            self.fields['organization'].initial = (
+                getattr(user, 'organization', '') or ''
+            )
+
+        for name, field in self.fields.items():
+            if name in ('consent_to_processing', 'subscribe_to_news'):
+                field.widget.attrs.setdefault('class', 'feedback-form__checkbox')
+                continue
+            widget = field.widget
+            existing = widget.attrs.get('class', '')
+            widget.attrs['class'] = (
+                f'{existing} {self.default_css_class}'.strip()
+            )
+
+    def clean_message(self):
+        """Проверяет, что сообщение содержит осмысленный текст."""
+        message = self.cleaned_data.get('message', '').strip()
+        if len(message) < 10:
+            raise forms.ValidationError(
+                'Сообщение слишком короткое. Опишите обращение подробнее '
+                '(минимум 10 символов).'
+            )
+        return message

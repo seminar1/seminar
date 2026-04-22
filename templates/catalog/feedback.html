@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Обратная связь — Научный Центр МУИВ им. С.Ю. Витте{% endblock %}
+
+{% block meta_description %}Форма обратной связи научного центра МУИВ им. С.Ю. Витте. Задайте вопрос, оставьте отзыв или предложение — мы ответим в течение 1–2 рабочих дней. Доступна всем пользователям без регистрации.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/feedback.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="feedback-hero">
+    <div class="feedback-hero__backdrop" aria-hidden="true">
+        <span class="feedback-hero__blob feedback-hero__blob--1"></span>
+        <span class="feedback-hero__blob feedback-hero__blob--2"></span>
+    </div>
+    <div class="container feedback-hero__inner">
+        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+            <a href="{% url 'catalog:landing' %}">Главная</a>
+            <i class="bi bi-chevron-right"></i>
+            <a href="{% url 'catalog:contacts' %}">Контакты</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Обратная связь</span>
+        </nav>
+        <span class="feedback-hero__eyebrow">
+            <i class="bi bi-chat-left-dots"></i>
+            Мы на связи
+        </span>
+        <h1 class="feedback-hero__title">
+            Напишите нам — <span class="feedback-hero__title-accent">ответим в течение 1–2 дней</span>
+        </h1>
+        <p class="feedback-hero__lead">
+            Используйте форму ниже, чтобы задать вопрос научному центру МУИВ,
+            сообщить об ошибке на сайте, предложить сотрудничество или
+            оставить обратную связь по мероприятию. Регистрация не требуется —
+            форма доступна всем посетителям.
+        </p>
+    </div>
+</section>
+
+<section class="feedback-section">
+    <div class="container feedback-section__grid">
+
+        <div class="feedback-section__form-wrap">
+            <article class="feedback-card">
+                <header class="feedback-card__header">
+                    <h2 class="feedback-card__title">
+                        <i class="bi bi-send"></i>
+                        Форма обратной связи
+                    </h2>
+                    <p class="feedback-card__subtitle">
+                        Поля, отмеченные <span class="feedback-form__required">*</span>, обязательны для заполнения.
+                        {% if not user.is_authenticated %}
+                            Хотите получить доступ к личному кабинету?
+                            <a href="{% url 'users:login' %}">Войдите</a>
+                            или <a href="{% url 'users:register' %}">зарегистрируйтесь</a>.
+                        {% endif %}
+                    </p>
+                </header>
+
+                <form method="post" class="feedback-form" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="feedback-form__alert feedback-form__alert--error">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="feedback-form__row">
+                        <div class="feedback-form__field">
+                            <label for="{{ form.topic.id_for_label }}" class="feedback-form__label">
+                                Тема обращения
+                            </label>
+                            {{ form.topic }}
+                            {% if form.topic.errors %}
+                                <span class="feedback-form__error">{{ form.topic.errors.0 }}</span>
+                            {% else %}
+                                <span class="feedback-form__hint">
+                                    Выберите подходящую категорию — так мы быстрее направим обращение
+                                    нужному специалисту.
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="feedback-form__row feedback-form__row--two">
+                        <div class="feedback-form__field">
+                            <label for="{{ form.full_name.id_for_label }}" class="feedback-form__label">
+                                Имя / ФИО <span class="feedback-form__required">*</span>
+                            </label>
+                            {{ form.full_name }}
+                            {% if form.full_name.errors %}
+                                <span class="feedback-form__error">{{ form.full_name.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="feedback-form__field">
+                            <label for="{{ form.email.id_for_label }}" class="feedback-form__label">
+                                Email для ответа <span class="feedback-form__required">*</span>
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <span class="feedback-form__error">{{ form.email.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="feedback-form__row feedback-form__row--two">
+                        <div class="feedback-form__field">
+                            <label for="{{ form.phone.id_for_label }}" class="feedback-form__label">
+                                Телефон
+                            </label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <span class="feedback-form__error">{{ form.phone.errors.0 }}</span>
+                            {% else %}
+                                <span class="feedback-form__hint">Необязательно</span>
+                            {% endif %}
+                        </div>
+                        <div class="feedback-form__field">
+                            <label for="{{ form.organization.id_for_label }}" class="feedback-form__label">
+                                Организация / подразделение
+                            </label>
+                            {{ form.organization }}
+                            {% if form.organization.errors %}
+                                <span class="feedback-form__error">{{ form.organization.errors.0 }}</span>
+                            {% else %}
+                                <span class="feedback-form__hint">Необязательно</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="feedback-form__field">
+                        <label for="{{ form.subject.id_for_label }}" class="feedback-form__label">
+                            Тема сообщения
+                        </label>
+                        {{ form.subject }}
+                        {% if form.subject.errors %}
+                            <span class="feedback-form__error">{{ form.subject.errors.0 }}</span>
+                        {% else %}
+                            <span class="feedback-form__hint">
+                                Короткий заголовок, помогающий понять суть обращения.
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="feedback-form__field">
+                        <label for="{{ form.message.id_for_label }}" class="feedback-form__label">
+                            Сообщение <span class="feedback-form__required">*</span>
+                        </label>
+                        {{ form.message }}
+                        {% if form.message.errors %}
+                            <span class="feedback-form__error">{{ form.message.errors.0 }}</span>
+                        {% else %}
+                            <span class="feedback-form__hint">
+                                Опишите вопрос подробно — это ускорит ответ.
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="feedback-form__consents">
+                        <label class="feedback-form__check">
+                            {{ form.consent_to_processing }}
+                            <span>{{ form.consent_to_processing.label }}</span>
+                        </label>
+                        {% if form.consent_to_processing.errors %}
+                            <span class="feedback-form__error">
+                                {{ form.consent_to_processing.errors.0 }}
+                            </span>
+                        {% endif %}
+
+                        <label class="feedback-form__check">
+                            {{ form.subscribe_to_news }}
+                            <span>{{ form.subscribe_to_news.label }}</span>
+                        </label>
+                    </div>
+
+                    <div class="feedback-form__actions">
+                        <button type="submit" class="btn btn--primary btn--lg">
+                            <i class="bi bi-send"></i>
+                            Отправить обращение
+                        </button>
+                        <a href="{% url 'catalog:contacts' %}" class="btn btn--outline btn--lg">
+                            <i class="bi bi-geo-alt"></i>
+                            К контактам центра
+                        </a>
+                    </div>
+                </form>
+            </article>
+        </div>
+
+        <aside class="feedback-section__side">
+            <article class="feedback-side-card feedback-side-card--contacts">
+                <h3 class="feedback-side-card__title">
+                    <i class="bi bi-info-circle"></i>
+                    Прямые контакты
+                </h3>
+                <ul class="feedback-side-card__list">
+                    {% for item in contact_shortcuts %}
+                        <li class="feedback-contact">
+                            <span class="feedback-contact__icon" aria-hidden="true">
+                                <i class="bi {{ item.icon }}"></i>
+                            </span>
+                            <div class="feedback-contact__body">
+                                <span class="feedback-contact__label">{{ item.label }}</span>
+                                <a class="feedback-contact__value" href="{{ item.href }}">
+                                    {{ item.value }}
+                                </a>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </article>
+
+            <article class="feedback-side-card">
+                <h3 class="feedback-side-card__title">
+                    <i class="bi bi-stars"></i>
+                    Почему писать нам удобно
+                </h3>
+                <ul class="feedback-side-card__features">
+                    {% for item in highlights %}
+                        <li class="feedback-feature">
+                            <span class="feedback-feature__icon" aria-hidden="true">
+                                <i class="bi {{ item.icon }}"></i>
+                            </span>
+                            <div>
+                                <h4>{{ item.title }}</h4>
+                                <p>{{ item.text }}</p>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </article>
+
+            <article class="feedback-side-card feedback-side-card--cta">
+                <h3 class="feedback-side-card__title">
+                    <i class="bi bi-question-circle"></i>
+                    Может, ответ уже есть?
+                </h3>
+                <p class="feedback-side-card__text">
+                    Загляните в раздел «Вопросы и ответы» — там собраны
+                    ответы на популярные вопросы о регистрации, участии и
+                    работе личного кабинета.
+                </p>
+                <a href="{% url 'catalog:faq' %}" class="btn btn--ghost">
+                    Перейти к FAQ
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </article>
+        </aside>
+    </div>
+</section>
+{% endblock %}

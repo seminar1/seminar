@@ -12,6 +12,7 @@ from catalog.views import (
     EventRegistrationCancelView,
     EventsView,
     FaqView,
+    FeedbackView,
     LandingView,
     MyRegistrationsView,
 )
@@ -46,6 +47,7 @@ urlpatterns = [
     path('about/', AboutView.as_view(), name='about'),
     path('faq/', FaqView.as_view(), name='faq'),
     path('contacts/', ContactsView.as_view(), name='contacts'),
+    path('feedback/', FeedbackView.as_view(), name='feedback'),
     path(
         'curator/events/',
         CuratorEventsView.as_view(),
