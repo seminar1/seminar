@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="{% static 'css/auth.css' %}">
 {% endblock %}
 
+{% block extra_js %}
+    <script src="{% static 'js/auth.js' %}" defer></script>
+{% endblock %}
+
 {% block content %}
 <section class="auth-page auth-page--register">
     <div class="auth-page__backdrop" aria-hidden="true">
@@ -115,32 +119,8 @@
                 </div>
 
                 <div class="auth-form__grid">
-                    <div class="auth-form__field">
-                        <label for="{{ form.password1.id_for_label }}" class="auth-form__label">
-                            {{ form.password1.label }}
-                        </label>
-                        {{ form.password1 }}
-                        {% if form.password1.help_text %}
-                            <div class="auth-form__hint">{{ form.password1.help_text|safe }}</div>
-                        {% endif %}
-                        {% if form.password1.errors %}
-                            <div class="auth-form__error">
-                                {% for error in form.password1.errors %}{{ error }}{% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="auth-form__field">
-                        <label for="{{ form.password2.id_for_label }}" class="auth-form__label">
-                            {{ form.password2.label }}
-                        </label>
-                        {{ form.password2 }}
-                        {% if form.password2.errors %}
-                            <div class="auth-form__error">
-                                {% for error in form.password2.errors %}{{ error }}{% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
+                    {% include 'users/_password_field.html' with field=form.password1 %}
+                    {% include 'users/_password_field.html' with field=form.password2 %}
                 </div>
 
                 <button type="submit" class="btn btn--primary btn--lg auth-form__submit">

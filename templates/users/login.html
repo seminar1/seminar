@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="{% static 'css/auth.css' %}">
 {% endblock %}
 
+{% block extra_js %}
+    <script src="{% static 'js/auth.js' %}" defer></script>
+{% endblock %}
+
 {% block content %}
 <section class="auth-page">
     <div class="auth-page__backdrop" aria-hidden="true">
@@ -73,17 +77,7 @@
                     {% endif %}
                 </div>
 
-                <div class="auth-form__field">
-                    <label for="{{ form.password.id_for_label }}" class="auth-form__label">
-                        {{ form.password.label }}
-                    </label>
-                    {{ form.password }}
-                    {% if form.password.errors %}
-                        <div class="auth-form__error">
-                            {% for error in form.password.errors %}{{ error }}{% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
+                {% include 'users/_password_field.html' with field=form.password %}
 
                 <button type="submit" class="btn btn--primary btn--lg auth-form__submit">
                     <i class="bi bi-box-arrow-in-right"></i>
