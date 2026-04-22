@@ -37,6 +37,7 @@
                     Создать мероприятие
                 </a>
             </div>
+            {% include 'catalog/curator/_tabs.html' with active_tab='events' %}
         </header>
 
         <div class="admin-stats">
@@ -88,8 +89,8 @@
             {% endif %}
         </form>
 
-        <div class="admin-table-wrap">
-            <table class="admin-table">
+        <div class="admin-table-wrap admin-table-wrap--fluid">
+            <table class="admin-table admin-table--fluid">
                 <thead>
                     <tr>
                         <th>Мероприятие</th>

@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Регистрации — Панель куратора{% endblock %}
+
+{% block meta_description %}Кураторская панель: просмотр и обработка регистраций участников на научные мероприятия.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_feedback.css' %}">
+    <link rel="stylesheet" href="{% static 'css/curator.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/event_picker.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+<section class="admin-page">
+    <div class="container">
+        <header class="admin-page__header">
+            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+                <a href="{% url 'catalog:landing' %}">Главная</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>Панель куратора</span>
+            </nav>
+            <div class="curator-header">
+                <div>
+                    <span class="admin-page__eyebrow curator-header__eyebrow">
+                        <i class="bi bi-briefcase"></i>
+                        Панель куратора
+                    </span>
+                    <h1 class="admin-page__title">Регистрации</h1>
+                    <p class="admin-page__lead">
+                        Просматривайте заявки участников, подтверждайте
+                        регистрации и управляйте статусами заявок по всем
+                        мероприятиям.
+                    </p>
+                </div>
+            </div>
+            {% include 'catalog/curator/_tabs.html' with active_tab='registrations' %}
+        </header>
+
+        <div class="admin-stats admin-stats--interactive">
+            <a href="?{{ preserved_query_string }}"
+               class="admin-stat admin-stat--link {% if not current_status %}is-active{% endif %}">
+                <div class="admin-stat__value">{{ total_count }}</div>
+                <div class="admin-stat__label">Всего заявок</div>
+                <span class="admin-stat__hint">Показать все</span>
+            </a>
+            <a href="?{% if preserved_query_string %}{{ preserved_query_string }}&{% endif %}status=pending"
+               class="admin-stat admin-stat--link admin-stat--admin {% if current_status == 'pending' %}is-active{% endif %}">
+                <div class="admin-stat__value">{{ pending_count }}</div>
+                <div class="admin-stat__label">Ожидают подтверждения</div>
+                <span class="admin-stat__hint">Фильтровать</span>
+            </a>
+            <a href="?{% if preserved_query_string %}{{ preserved_query_string }}&{% endif %}status=confirmed"
+               class="admin-stat admin-stat--link admin-stat--user {% if current_status == 'confirmed' %}is-active{% endif %}">
+                <div class="admin-stat__value">{{ confirmed_count }}</div>
+                <div class="admin-stat__label">Подтверждены</div>
+                <span class="admin-stat__hint">Фильтровать</span>
+            </a>
+            <a href="?{% if preserved_query_string %}{{ preserved_query_string }}&{% endif %}status=waitlist"
+               class="admin-stat admin-stat--link admin-stat--curator {% if current_status == 'waitlist' %}is-active{% endif %}">
+                <div class="admin-stat__value">{{ waitlist_count }}</div>
+                <div class="admin-stat__label">В листе ожидания</div>
+                <span class="admin-stat__hint">Фильтровать</span>
+            </a>
+        </div>
+
+        <form method="get" class="registrations-filters">
+            <section class="event-picker-card">
+                <div class="event-picker-card__head">
+                    <span class="event-picker-card__eyebrow">
+                        <i class="bi bi-calendar2-event"></i>
+                        Фильтр по мероприятию
+                    </span>
+                    <p class="event-picker-card__hint">
+                        Начните вводить название — список будет
+                        отфильтрован. Для сброса выберите пункт
+                        «Все мероприятия».
+                    </p>
+                </div>
+
+                <div class="event-picker {% if selected_event_obj %}event-picker--has-clear{% endif %}" data-event-picker>
+                    <input type="hidden" name="event" value="{{ current_event }}" data-event-picker-input>
+                    <button type="button" class="event-picker__trigger" data-event-picker-trigger aria-haspopup="listbox" aria-expanded="false">
+                        <span class="event-picker__trigger-icon">
+                            <i class="bi {% if selected_event_obj %}bi-calendar2-check{% else %}bi-calendar2-event{% endif %}"></i>
+                        </span>
+                        <span class="event-picker__trigger-main">
+                            <span class="event-picker__trigger-label" data-event-picker-label>
+                                {% if selected_event_obj %}
+                                    {{ selected_event_obj.title }}
+                                {% else %}
+                                    Все мероприятия
+                                {% endif %}
+                            </span>
+                            <span class="event-picker__trigger-sub" data-event-picker-sublabel>
+                                {% if selected_event_obj %}
+                                    {{ selected_event_obj.starts_at|date:"d.m.Y H:i" }}
+                                {% else %}
+                                    Показывать заявки со всех мероприятий
+                                {% endif %}
+                            </span>
+                        </span>
+                        <span class="event-picker__trigger-caret">
+                            <i class="bi bi-chevron-down"></i>
+                        </span>
+                    </button>
+                    {% if selected_event_obj %}
+                        <button type="button" class="event-picker__clear" data-event-picker-clear aria-label="Сбросить выбор мероприятия">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    {% endif %}
+
+                    <div class="event-picker__panel" data-event-picker-panel hidden>
+                        <div class="event-picker__search">
+                            <i class="bi bi-search"></i>
+                            <input
+                                type="search"
+                                placeholder="Введите название мероприятия"
+                                data-event-picker-search
+                                aria-label="Поиск мероприятия"
+                                autocomplete="off"
+                            >
+                        </div>
+                        <ul class="event-picker__list" role="listbox" data-event-picker-list>
+                            <li>
+                                <button type="button"
+                                        class="event-picker__option event-picker__option--all {% if not current_event %}is-selected{% endif %}"
+                                        data-event-picker-option
+                                        data-value=""
+                                        data-label="Все мероприятия"
+                                        data-sublabel="Показывать заявки со всех мероприятий"
+                                        data-search="все мероприятия">
+                                    <span class="event-picker__option-icon">
+                                        <i class="bi bi-grid"></i>
+                                    </span>
+                                    <span class="event-picker__option-body">
+                                        <span class="event-picker__option-title">Все мероприятия</span>
+                                        <span class="event-picker__option-sub">Сбросить фильтр</span>
+                                    </span>
+                                </button>
+                            </li>
+                            {% for ev in events_for_filter %}
+                                <li>
+                                    <button type="button"
+                                            class="event-picker__option {% if current_event == ev.id|stringformat:'s' %}is-selected{% endif %}"
+                                            data-event-picker-option
+                                            data-value="{{ ev.id }}"
+                                            data-label="{{ ev.title }}"
+                                            data-sublabel="{{ ev.starts_at|date:'d.m.Y H:i' }}"
+                                            data-search="{{ ev.title|lower }} {{ ev.starts_at|date:'d.m.Y' }}">
+                                        <span class="event-picker__option-date">
+                                            <span class="event-picker__option-day">{{ ev.starts_at|date:"d.m" }}</span>
+                                            <span class="event-picker__option-year">{{ ev.starts_at|date:"Y" }}</span>
+                                        </span>
+                                        <span class="event-picker__option-body">
+                                            <span class="event-picker__option-title">{{ ev.title }}</span>
+                                            <span class="event-picker__option-sub">{{ ev.starts_at|date:"H:i" }}</span>
+                                        </span>
+                                    </button>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <div class="event-picker__empty" data-event-picker-empty hidden>
+                            <i class="bi bi-search"></i>
+                            Ничего не найдено
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="admin-filters registrations-filters__row">
+                <div class="admin-filters__search">
+                    <i class="bi bi-search"></i>
+                    <input
+                        type="search"
+                        name="q"
+                        value="{{ search_query }}"
+                        placeholder="Поиск по участнику или email"
+                        class="admin-filters__input"
+                    >
+                </div>
+                <div class="admin-filters__select-wrap">
+                    <select name="status" class="admin-filters__select">
+                        <option value="">Все статусы</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn--primary">
+                    <i class="bi bi-funnel"></i>
+                    Применить
+                </button>
+                {% if search_query or current_status or current_event %}
+                    <a href="{% url 'catalog:curator_registrations' %}" class="btn btn--ghost">
+                        <i class="bi bi-x-circle"></i>
+                        Сбросить
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+
+        <div class="admin-table-wrap admin-table-wrap--fluid">
+            <table class="admin-table admin-table--fluid">
+                <thead>
+                    <tr>
+                        <th>Участник</th>
+                        <th>Мероприятие</th>
+                        <th>Контакты</th>
+                        <th>Статус</th>
+                        <th>Подана</th>
+                        <th class="admin-table__actions-col">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in registrations %}
+                        <tr>
+                            <td>
+                                <div class="admin-user">
+                                    <span class="admin-user__avatar">
+                                        {% firstof item.full_name item.user.get_full_name item.user.username "?" as initials_source %}
+                                        {{ initials_source|slice:":1"|upper }}
+                                    </span>
+                                    <div>
+                                        <div class="admin-user__name">
+                                            {{ item.full_name|default:item.user.get_full_name|default:item.user.username }}
+                                        </div>
+                                        <div class="admin-user__login">@{{ item.user.username }}</div>
+                                        <span class="registration-source registration-source--{{ item.source }}">
+                                            {% if item.source == 'curator' %}
+                                                <i class="bi bi-briefcase"></i>
+                                            {% elif item.source == 'import' %}
+                                                <i class="bi bi-cloud-arrow-down"></i>
+                                            {% else %}
+                                                <i class="bi bi-person"></i>
+                                            {% endif %}
+                                            {{ item.get_source_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="feedback-topic-chip">
+                                    <i class="bi bi-calendar2-event"></i>
+                                    {{ item.event.title }}
+                                </div>
+                                <div class="admin-user__login">
+                                    {{ item.event.starts_at|date:"d.m.Y H:i" }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="admin-user__login">{{ item.email|default:"—" }}</div>
+                                {% if item.phone %}
+                                    <div class="admin-user__login">{{ item.phone }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="registration-status registration-status--{{ item.status }}">
+                                    {{ item.get_status_display }}
+                                </span>
+                                {% if item.status == 'waitlist' and item.waitlist_position %}
+                                    <div class="admin-user__login">
+                                        Позиция №{{ item.waitlist_position }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="admin-table__date">
+                                {{ item.created_at|date:"d.m.Y" }}<br>
+                                <span class="admin-table__email">{{ item.created_at|date:"H:i" }}</span>
+                            </td>
+                            <td>
+                                <div class="admin-table__actions">
+                                    <a href="{% url 'catalog:curator_registration_detail' item.pk %}" class="btn btn--primary btn--sm">
+                                        <i class="bi bi-eye"></i>
+                                        Открыть
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="admin-table__empty">
+                                <i class="bi bi-inbox"></i>
+                                Заявок пока нет
+                                {% if search_query or current_status or current_event %}
+                                    по заданным фильтрам
+                                {% endif %}.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+            <div class="admin-pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_event %}&event={{ current_event }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="admin-pagination__link">
+                        <i class="bi bi-chevron-left"></i>
+                        Назад
+                    </a>
+                {% endif %}
+                <span class="admin-pagination__info">
+                    Страница {{ page_obj.number }} из {{ paginator.num_pages }}
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_event %}&event={{ current_event }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="admin-pagination__link">
+                        Вперёд
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

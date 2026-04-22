@@ -7,6 +7,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.http import urlencode
 from django.views.generic import (
     CreateView,
     DetailView,
@@ -17,6 +18,7 @@ from django.views.generic import (
 
 from catalog.forms import (
     AdminFeedbackMessageStatusForm,
+    CuratorRegistrationStatusForm,
     DirectionForm,
     EventForm,
     EventRegistrationForm,
@@ -1047,6 +1049,7 @@ class CuratorEventsView(CuratorRequiredMixin, ListView):
         context['status_choices'] = Event.Status.choices
         context['current_status'] = self.request.GET.get('status', '')
         context['search_query'] = self.request.GET.get('q', '')
+        context['active_tab'] = 'events'
         qs = Event.objects.all()
         context['total_count'] = qs.count()
         context['published_count'] = qs.filter(
@@ -1078,6 +1081,216 @@ class CuratorEventCreateView(CuratorRequiredMixin, CreateView):
             f'Мероприятие «{event.title}» успешно создано.',
         )
         return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        """Передаёт в шаблон активную вкладку панели куратора."""
+        context = super().get_context_data(**kwargs)
+        context['active_tab'] = 'events'
+        return context
+
+
+class CuratorRegistrationsView(CuratorRequiredMixin, ListView):
+    """Кураторская страница со списком всех регистраций.
+
+    Выводит таблицу заявок со всех мероприятий, поддерживает поиск
+    по участнику (ФИО / email / username), фильтр по статусу и по
+    конкретному мероприятию. В сайдбаре — быстрые агрегаты
+    (ожидают подтверждения, подтверждены, в листе ожидания).
+    """
+
+    model = EventRegistration
+    template_name = 'catalog/curator/registrations.html'
+    context_object_name = 'registrations'
+    paginate_by = 25
+
+    def _apply_non_status_filters(self, queryset):
+        """Применяет поиск и фильтр по мероприятию, но не по статусу."""
+        query = self.request.GET.get('q', '').strip()
+        if query:
+            queryset = queryset.filter(
+                Q(full_name__icontains=query)
+                | Q(email__icontains=query)
+                | Q(user__username__icontains=query)
+                | Q(user__first_name__icontains=query)
+                | Q(user__last_name__icontains=query)
+                | Q(event__title__icontains=query)
+            )
+        event_id = self.request.GET.get('event', '').strip()
+        if event_id.isdigit():
+            queryset = queryset.filter(event_id=int(event_id))
+        return queryset
+
+    def get_queryset(self):
+        """Возвращает регистрации с применёнными фильтрами."""
+        queryset = (
+            EventRegistration.objects
+            .select_related('event', 'user')
+            .order_by('-created_at')
+        )
+        queryset = self._apply_non_status_filters(queryset)
+
+        status = self.request.GET.get('status', '').strip()
+        if status in dict(EventRegistration.Status.choices):
+            queryset = queryset.filter(status=status)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        """Добавляет справочники фильтров и агрегированные счётчики."""
+        context = super().get_context_data(**kwargs)
+        context['active_tab'] = 'registrations'
+        context['status_choices'] = EventRegistration.Status.choices
+        context['current_status'] = self.request.GET.get('status', '')
+        context['current_event'] = self.request.GET.get('event', '')
+        context['search_query'] = self.request.GET.get('q', '')
+
+        # Счётчики пересчитываются с учётом поиска и фильтра по
+        # мероприятию, но без ограничения по статусу — чтобы кнопки-
+        # карточки показывали, сколько заявок каждого статуса попадает
+        # в текущую выборку.
+        base_qs = self._apply_non_status_filters(
+            EventRegistration.objects.all()
+        )
+        context['total_count'] = base_qs.count()
+        context['pending_count'] = base_qs.filter(
+            status=EventRegistration.Status.PENDING
+        ).count()
+        context['confirmed_count'] = base_qs.filter(
+            status=EventRegistration.Status.CONFIRMED
+        ).count()
+        context['waitlist_count'] = base_qs.filter(
+            status=EventRegistration.Status.WAITLIST
+        ).count()
+
+        preserved = {}
+        if context['search_query']:
+            preserved['q'] = context['search_query']
+        if context['current_event']:
+            preserved['event'] = context['current_event']
+        context['preserved_query_string'] = urlencode(preserved)
+
+        context['events_for_filter'] = (
+            Event.objects.order_by('-starts_at')
+            .only('id', 'title', 'starts_at')[:200]
+        )
+
+        selected_event_id = self.request.GET.get('event', '').strip()
+        context['selected_event_obj'] = None
+        if selected_event_id.isdigit():
+            context['selected_event_obj'] = (
+                Event.objects.filter(pk=int(selected_event_id))
+                .only('id', 'title', 'starts_at')
+                .first()
+            )
+        return context
+
+
+class CuratorRegistrationDetailView(CuratorRequiredMixin, View):
+    """Кураторская карточка отдельной регистрации.
+
+    Показывает всю информацию по заявке: снимок контактных данных
+    участника, связанное мероприятие, историю жизненного цикла
+    (создано / подтверждено / отменено) и комментарий участника.
+    Из управляющих действий доступно изменение статуса — в том
+    числе подтверждение ожидающих заявок и отмена с указанием
+    причины.
+    """
+
+    http_method_names = ['get', 'post']
+    template_name = 'catalog/curator/registration_detail.html'
+
+    def _get_registration(self, pk):
+        """Загружает регистрацию с предвыбранными связями."""
+        return get_object_or_404(
+            EventRegistration.objects.select_related(
+                'event', 'event__direction', 'event__event_type',
+                'user', 'cancelled_by',
+            ),
+            pk=pk,
+        )
+
+    def _build_context(self, registration, status_form):
+        """Формирует общий контекст шаблона для GET и POST."""
+        return {
+            'registration': registration,
+            'status_form': status_form,
+            'active_tab': 'registrations',
+        }
+
+    def get(self, request, pk, *args, **kwargs):
+        """Отображает карточку регистрации с формой смены статуса."""
+        registration = self._get_registration(pk)
+        status_form = CuratorRegistrationStatusForm(instance=registration)
+        return render(
+            request,
+            self.template_name,
+            self._build_context(registration, status_form),
+        )
+
+    def post(self, request, pk, *args, **kwargs):
+        """Сохраняет новый статус регистрации и служебные поля."""
+        registration = self._get_registration(pk)
+        previous_status = registration.status
+
+        status_form = CuratorRegistrationStatusForm(
+            request.POST, instance=registration
+        )
+
+        if status_form.is_valid():
+            updated = status_form.save(commit=False)
+            new_status = updated.status
+            now = timezone.now()
+
+            if (
+                new_status == EventRegistration.Status.CONFIRMED
+                and previous_status != EventRegistration.Status.CONFIRMED
+            ):
+                updated.confirmed_at = now
+                updated.cancelled_at = None
+                updated.cancelled_by = None
+                updated.cancellation_reason = ''
+                if previous_status == EventRegistration.Status.WAITLIST:
+                    updated.waitlist_position = None
+
+            elif (
+                new_status == EventRegistration.Status.CANCELLED
+                and previous_status != EventRegistration.Status.CANCELLED
+            ):
+                updated.cancelled_at = now
+                updated.cancelled_by = request.user
+
+            elif new_status == EventRegistration.Status.WAITLIST and (
+                updated.waitlist_position in (None, 0)
+            ):
+                last_position = (
+                    EventRegistration.objects
+                    .filter(event=updated.event)
+                    .exclude(pk=updated.pk)
+                    .aggregate(Max('waitlist_position'))
+                    .get('waitlist_position__max')
+                )
+                updated.waitlist_position = (last_position or 0) + 1
+
+            updated.save()
+
+            messages.success(
+                request,
+                f'Статус заявки #{registration.pk} обновлён: '
+                f'«{registration.get_status_display()}».',
+            )
+            return redirect(
+                'catalog:curator_registration_detail', pk=registration.pk
+            )
+
+        messages.error(
+            request,
+            'Не удалось обновить статус: проверьте корректность данных.',
+        )
+        return render(
+            request,
+            self.template_name,
+            self._build_context(registration, status_form),
+        )
 
 
 class AdminDirectionsView(AdminRequiredMixin, ListView):

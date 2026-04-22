@@ -469,3 +469,39 @@ class AdminFeedbackMessageStatusForm(forms.ModelForm):
             widget.attrs['class'] = (
                 f'{existing} {self.default_css_class}'.strip()
             )
+
+
+class CuratorRegistrationStatusForm(forms.ModelForm):
+    """Компактная форма изменения статуса регистрации куратором.
+
+    Позволяет переключать заявку между статусами жизненного цикла
+    (ожидание подтверждения → подтверждена → посетил(а) / не явился
+    / отменена / лист ожидания). Дополнительно принимает необязательное
+    поле ``cancellation_reason``, которое сохраняется только при выборе
+    статуса «Отменена».
+    """
+
+    default_css_class = 'feedback-status-form__select'
+
+    class Meta:
+        model = EventRegistration
+        fields = ('status', 'cancellation_reason')
+        widgets = {
+            'status': forms.Select(),
+            'cancellation_reason': forms.Textarea(
+                attrs={
+                    'rows': 2,
+                    'placeholder': 'Укажите причину отмены (необязательно)',
+                    'class': 'curator-form__input',
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['cancellation_reason'].required = False
+        status_widget = self.fields['status'].widget
+        existing = status_widget.attrs.get('class', '')
+        status_widget.attrs['class'] = (
+            f'{existing} {self.default_css_class}'.strip()
+        )

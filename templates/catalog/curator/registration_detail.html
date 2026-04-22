@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заявка #{{ registration.pk }} — Панель куратора{% endblock %}
+
+{% block meta_description %}Карточка регистрации участника на научное мероприятие: сведения об участнике, статус заявки и история изменений.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/curator.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_feedback.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="admin-page">
+    <div class="container">
+        <header class="admin-page__header">
+            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+                <a href="{% url 'catalog:landing' %}">Главная</a>
+                <i class="bi bi-chevron-right"></i>
+                <a href="{% url 'catalog:curator_registrations' %}">Регистрации</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>Заявка #{{ registration.pk }}</span>
+            </nav>
+            <div class="curator-header">
+                <div>
+                    <span class="admin-page__eyebrow curator-header__eyebrow">
+                        <i class="bi bi-briefcase"></i>
+                        Панель куратора
+                    </span>
+                    <h1 class="admin-page__title">
+                        Заявка №{{ registration.pk }}
+                    </h1>
+                    <p class="admin-page__lead">
+                        От {{ registration.full_name|default:registration.user.get_full_name|default:registration.user.username }},
+                        получена {{ registration.created_at|date:"d.m.Y H:i" }}.
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        <div class="feedback-detail">
+            <div class="feedback-detail__main">
+                <article class="feedback-detail-card">
+                    <header class="feedback-detail-card__header">
+                        <div class="feedback-detail-card__title-row">
+                            <h2 class="feedback-detail-card__title">
+                                <i class="bi bi-calendar2-event"></i>
+                                Мероприятие
+                            </h2>
+                            <span class="registration-status registration-status--{{ registration.status }}">
+                                {{ registration.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="feedback-topic-chip">
+                            <i class="bi bi-calendar2-event"></i>
+                            {{ registration.event.title }}
+                        </div>
+                    </header>
+
+                    <dl class="feedback-detail-side__list" style="padding: 0;">
+                        <div>
+                            <dt>Дата и время</dt>
+                            <dd>{{ registration.event.starts_at|date:"d.m.Y H:i" }}</dd>
+                        </div>
+                        {% if registration.event.direction %}
+                            <div>
+                                <dt>Направление</dt>
+                                <dd>{{ registration.event.direction.title }}</dd>
+                            </div>
+                        {% endif %}
+                        {% if registration.event.event_type %}
+                            <div>
+                                <dt>Тип</dt>
+                                <dd>{{ registration.event.event_type.title }}</dd>
+                            </div>
+                        {% endif %}
+                    </dl>
+
+                    <div class="feedback-detail-card__related" style="margin-top: 18px;">
+                        <a href="{% url 'catalog:event_detail' registration.event.slug %}" target="_blank" rel="noopener">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                            Открыть страницу мероприятия
+                        </a>
+                    </div>
+                </article>
+
+                {% if registration.note %}
+                    <article class="feedback-detail-card">
+                        <header class="feedback-detail-card__header">
+                            <div class="feedback-detail-card__title-row">
+                                <h2 class="feedback-detail-card__title">
+                                    <i class="bi bi-chat-left-text"></i>
+                                    Комментарий участника
+                                </h2>
+                            </div>
+                        </header>
+                        <div class="feedback-detail-card__message">
+                            {{ registration.note|linebreaksbr }}
+                        </div>
+                    </article>
+                {% endif %}
+
+                <article class="feedback-detail-card">
+                    <header class="feedback-detail-card__header">
+                        <div class="feedback-detail-card__title-row">
+                            <h2 class="feedback-detail-card__title">
+                                <i class="bi bi-arrow-repeat"></i>
+                                Управление статусом
+                            </h2>
+                        </div>
+                    </header>
+
+                    <form method="post" class="feedback-status-form">
+                        {% csrf_token %}
+
+                        <label for="{{ status_form.status.id_for_label }}" class="feedback-status-form__label">
+                            <i class="bi bi-flag"></i>
+                            Статус заявки
+                        </label>
+                        <div class="feedback-status-form__row">
+                            {{ status_form.status }}
+                            <button type="submit" class="btn btn--primary">
+                                <i class="bi bi-save"></i>
+                                Сохранить
+                            </button>
+                            <a href="{% url 'catalog:curator_registrations' %}" class="btn btn--ghost">
+                                <i class="bi bi-arrow-left"></i>
+                                К списку
+                            </a>
+                        </div>
+                        {% if status_form.status.errors %}
+                            <div class="curator-form__error">{{ status_form.status.errors.0 }}</div>
+                        {% endif %}
+
+                        <div class="curator-form__field" style="margin-top: 18px;">
+                            <label for="{{ status_form.cancellation_reason.id_for_label }}" class="curator-form__label">
+                                Причина отмены
+                                <span class="curator-form__hint" style="font-weight: 400;">(заполняется при статусе «Отменена»)</span>
+                            </label>
+                            {{ status_form.cancellation_reason }}
+                            {% if status_form.cancellation_reason.errors %}
+                                <div class="curator-form__error">{{ status_form.cancellation_reason.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </form>
+                </article>
+            </div>
+
+            <aside class="feedback-detail__aside">
+                <article class="feedback-detail-side">
+                    <h3 class="feedback-detail-side__title">
+                        <i class="bi bi-person-lines-fill"></i>
+                        Участник
+                    </h3>
+                    <dl class="feedback-detail-side__list">
+                        <div>
+                            <dt>ФИО</dt>
+                            <dd>{{ registration.full_name|default:registration.user.get_full_name|default:"—" }}</dd>
+                        </div>
+                        <div>
+                            <dt>Логин</dt>
+                            <dd>@{{ registration.user.username }}</dd>
+                        </div>
+                        {% if registration.email %}
+                            <div>
+                                <dt>Email</dt>
+                                <dd>
+                                    <a href="mailto:{{ registration.email }}">{{ registration.email }}</a>
+                                </dd>
+                            </div>
+                        {% endif %}
+                        {% if registration.phone %}
+                            <div>
+                                <dt>Телефон</dt>
+                                <dd>
+                                    <a href="tel:{{ registration.phone }}">{{ registration.phone }}</a>
+                                </dd>
+                            </div>
+                        {% endif %}
+                        {% if registration.organization %}
+                            <div>
+                                <dt>Организация</dt>
+                                <dd>{{ registration.organization }}</dd>
+                            </div>
+                        {% endif %}
+                        {% if registration.position %}
+                            <div>
+                                <dt>Должность / статус</dt>
+                                <dd>{{ registration.position }}</dd>
+                            </div>
+                        {% endif %}
+                    </dl>
+                </article>
+
+                <article class="feedback-detail-side">
+                    <h3 class="feedback-detail-side__title">
+                        <i class="bi bi-info-circle"></i>
+                        История заявки
+                    </h3>
+                    <dl class="feedback-detail-side__list">
+                        <div>
+                            <dt>Подана</dt>
+                            <dd>{{ registration.created_at|date:"d.m.Y H:i" }}</dd>
+                        </div>
+                        <div>
+                            <dt>Обновлена</dt>
+                            <dd>{{ registration.updated_at|date:"d.m.Y H:i" }}</dd>
+                        </div>
+                        <div>
+                            <dt>Источник</dt>
+                            <dd>{{ registration.get_source_display }}</dd>
+                        </div>
+                        {% if registration.confirmed_at %}
+                            <div>
+                                <dt>Подтверждена</dt>
+                                <dd>{{ registration.confirmed_at|date:"d.m.Y H:i" }}</dd>
+                            </div>
+                        {% endif %}
+                        {% if registration.waitlist_position %}
+                            <div>
+                                <dt>Позиция в листе ожидания</dt>
+                                <dd>№{{ registration.waitlist_position }}</dd>
+                            </div>
+                        {% endif %}
+                        {% if registration.cancelled_at %}
+                            <div>
+                                <dt>Отменена</dt>
+                                <dd>{{ registration.cancelled_at|date:"d.m.Y H:i" }}</dd>
+                            </div>
+                            {% if registration.cancelled_by %}
+                                <div>
+                                    <dt>Отменил(а)</dt>
+                                    <dd>
+                                        {{ registration.cancelled_by.get_full_name|default:registration.cancelled_by.username }}
+                                    </dd>
+                                </div>
+                            {% endif %}
+                            {% if registration.cancellation_reason %}
+                                <div>
+                                    <dt>Причина отмены</dt>
+                                    <dd>{{ registration.cancellation_reason }}</dd>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </dl>
+                </article>
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}
