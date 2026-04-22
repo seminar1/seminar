@@ -2,12 +2,6 @@
 from django.urls import path
 
 from catalog.views import (
-    AdminDirectionDeleteView,
-    AdminDirectionsView,
-    AdminDirectionUpdateView,
-    AdminEventTypeDeleteView,
-    AdminEventTypesView,
-    AdminEventTypeUpdateView,
     AdminFeedbackMessageDetailView,
     AdminFeedbackMessagesView,
     AdminFeedbackTopicDeleteView,
@@ -35,36 +29,6 @@ urlpatterns = [
         'admin/users/<int:pk>/role/',
         AdminUserRoleUpdateView.as_view(),
         name='admin_user_role',
-    ),
-    path(
-        'admin/directions/',
-        AdminDirectionsView.as_view(),
-        name='admin_directions',
-    ),
-    path(
-        'admin/directions/<int:pk>/edit/',
-        AdminDirectionUpdateView.as_view(),
-        name='admin_direction_edit',
-    ),
-    path(
-        'admin/directions/<int:pk>/delete/',
-        AdminDirectionDeleteView.as_view(),
-        name='admin_direction_delete',
-    ),
-    path(
-        'admin/event-types/',
-        AdminEventTypesView.as_view(),
-        name='admin_event_types',
-    ),
-    path(
-        'admin/event-types/<int:pk>/edit/',
-        AdminEventTypeUpdateView.as_view(),
-        name='admin_event_type_edit',
-    ),
-    path(
-        'admin/event-types/<int:pk>/delete/',
-        AdminEventTypeDeleteView.as_view(),
-        name='admin_event_type_delete',
     ),
     path(
         'admin/feedback-topics/',

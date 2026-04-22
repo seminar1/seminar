@@ -5,8 +5,14 @@ from catalog.converters import UnicodeSlugConverter
 from catalog.views import (
     AboutView,
     ContactsView,
+    CuratorDirectionDeleteView,
+    CuratorDirectionsView,
+    CuratorDirectionUpdateView,
     CuratorEventCreateView,
     CuratorEventsView,
+    CuratorEventTypeDeleteView,
+    CuratorEventTypesView,
+    CuratorEventTypeUpdateView,
     CuratorRegistrationDetailView,
     CuratorRegistrationsView,
     EventDetailView,
@@ -69,5 +75,35 @@ urlpatterns = [
         'curator/registrations/<int:pk>/',
         CuratorRegistrationDetailView.as_view(),
         name='curator_registration_detail',
+    ),
+    path(
+        'curator/directions/',
+        CuratorDirectionsView.as_view(),
+        name='curator_directions',
+    ),
+    path(
+        'curator/directions/<int:pk>/edit/',
+        CuratorDirectionUpdateView.as_view(),
+        name='curator_direction_edit',
+    ),
+    path(
+        'curator/directions/<int:pk>/delete/',
+        CuratorDirectionDeleteView.as_view(),
+        name='curator_direction_delete',
+    ),
+    path(
+        'curator/event-types/',
+        CuratorEventTypesView.as_view(),
+        name='curator_event_types',
+    ),
+    path(
+        'curator/event-types/<int:pk>/edit/',
+        CuratorEventTypeUpdateView.as_view(),
+        name='curator_event_type_edit',
+    ),
+    path(
+        'curator/event-types/<int:pk>/delete/',
+        CuratorEventTypeDeleteView.as_view(),
+        name='curator_event_type_delete',
     ),
 ]

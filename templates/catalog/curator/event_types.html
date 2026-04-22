@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Типы мероприятий — Админ-панель{% endblock %}
+{% block title %}Типы мероприятий — Панель куратора{% endblock %}
 
-{% block meta_description %}Управление справочником типов научных мероприятий в админ-панели.{% endblock %}
+{% block meta_description %}Управление справочником типов научных мероприятий в панели куратора.{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/admin.css' %}">
@@ -17,13 +17,13 @@
             <nav class="breadcrumbs" aria-label="Навигационная цепочка">
                 <a href="{% url 'catalog:landing' %}">Главная</a>
                 <i class="bi bi-chevron-right"></i>
-                <span>Админ-панель</span>
+                <span>Панель куратора</span>
             </nav>
-            <div class="admin-page__titles">
+            <div class="curator-header">
                 <div>
-                    <span class="admin-page__eyebrow">
-                        <i class="bi bi-shield-lock"></i>
-                        Панель администратора
+                    <span class="admin-page__eyebrow curator-header__eyebrow">
+                        <i class="bi bi-briefcase"></i>
+                        Панель куратора
                     </span>
                     <h1 class="admin-page__title">Типы мероприятий</h1>
                     <p class="admin-page__lead">
@@ -32,7 +32,7 @@
                     </p>
                 </div>
             </div>
-            {% include 'users/admin/_tabs.html' with active_tab='event_types' %}
+            {% include 'catalog/curator/_tabs.html' with active_tab='event_types' %}
         </header>
 
         <div class="admin-split">
@@ -43,11 +43,11 @@
                             <i class="bi bi-pencil-square"></i>
                             Редактирование
                         </div>
-                        <form method="post" action="{% url 'users:admin_event_type_edit' editing_id %}" class="admin-dict-form">
+                        <form method="post" action="{% url 'catalog:curator_event_type_edit' editing_id %}" class="admin-dict-form">
                             {% csrf_token %}
-                            {% include 'catalog/admin/_event_type_fields.html' with form=edit_form %}
+                            {% include 'catalog/curator/_event_type_fields.html' with form=edit_form %}
                             <div class="curator-form__actions">
-                                <a href="{% url 'users:admin_event_types' %}" class="btn btn--ghost">Отмена</a>
+                                <a href="{% url 'catalog:curator_event_types' %}" class="btn btn--ghost">Отмена</a>
                                 <button type="submit" class="btn btn--primary">Сохранить</button>
                             </div>
                         </form>
@@ -58,9 +58,9 @@
                             <i class="bi bi-plus-circle"></i>
                             Добавить тип
                         </div>
-                        <form method="post" action="{% url 'users:admin_event_types' %}" class="admin-dict-form">
+                        <form method="post" action="{% url 'catalog:curator_event_types' %}" class="admin-dict-form">
                             {% csrf_token %}
-                            {% include 'catalog/admin/_event_type_fields.html' with form=form %}
+                            {% include 'catalog/curator/_event_type_fields.html' with form=form %}
                             <div class="curator-form__actions">
                                 <button type="submit" class="btn btn--primary">
                                     <i class="bi bi-plus-lg"></i>
@@ -73,8 +73,8 @@
             </aside>
 
             <div class="admin-split__main">
-                <div class="admin-table-wrap">
-                    <table class="admin-table">
+                <div class="admin-table-wrap admin-table-wrap--fluid">
+                    <table class="admin-table admin-table--fluid">
                         <thead>
                             <tr>
                                 <th>Название</th>
@@ -108,11 +108,11 @@
                                     </td>
                                     <td>
                                         <div class="admin-table__actions">
-                                            <a href="{% url 'users:admin_event_type_edit' event_type.pk %}" class="btn btn--ghost btn--sm">
+                                            <a href="{% url 'catalog:curator_event_type_edit' event_type.pk %}" class="btn btn--ghost btn--sm">
                                                 <i class="bi bi-pencil"></i>
                                                 Изменить
                                             </a>
-                                            <form method="post" action="{% url 'users:admin_event_type_delete' event_type.pk %}" class="admin-table__delete">
+                                            <form method="post" action="{% url 'catalog:curator_event_type_delete' event_type.pk %}" class="admin-table__delete">
                                                 {% csrf_token %}
                                                 <button type="submit" class="btn btn--sm btn--danger" onclick="return confirm('Удалить тип «{{ event_type.title|escapejs }}»?');">
                                                     <i class="bi bi-trash"></i>

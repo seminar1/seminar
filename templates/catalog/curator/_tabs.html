@@ -1,6 +1,7 @@
 {% comment %}
     Навигация по разделам панели куратора. Ожидает переменную
-    ``active_tab`` со значением 'events' или 'registrations'.
+    ``active_tab`` со значением:
+    'events', 'registrations', 'directions' или 'event_types'.
 {% endcomment %}
 <nav class="admin-tabs" aria-label="Разделы панели куратора">
     <a href="{% url 'catalog:curator_events' %}"
@@ -12,5 +13,15 @@
        class="admin-tabs__link {% if active_tab == 'registrations' %}is-active{% endif %}">
         <i class="bi bi-person-check"></i>
         Регистрации
+    </a>
+    <a href="{% url 'catalog:curator_directions' %}"
+       class="admin-tabs__link {% if active_tab == 'directions' %}is-active{% endif %}">
+        <i class="bi bi-diagram-3"></i>
+        Направления
+    </a>
+    <a href="{% url 'catalog:curator_event_types' %}"
+       class="admin-tabs__link {% if active_tab == 'event_types' %}is-active{% endif %}">
+        <i class="bi bi-tag"></i>
+        Типы мероприятий
     </a>
 </nav>

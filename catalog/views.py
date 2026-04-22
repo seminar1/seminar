@@ -1293,11 +1293,11 @@ class CuratorRegistrationDetailView(CuratorRequiredMixin, View):
         )
 
 
-class AdminDirectionsView(AdminRequiredMixin, ListView):
-    """Админ-страница управления научными направлениями."""
+class CuratorDirectionsView(CuratorRequiredMixin, ListView):
+    """Кураторская страница управления научными направлениями."""
 
     model = Direction
-    template_name = 'catalog/admin/directions.html'
+    template_name = 'catalog/curator/directions.html'
     context_object_name = 'directions'
     paginate_by = 50
 
@@ -1315,6 +1315,7 @@ class AdminDirectionsView(AdminRequiredMixin, ListView):
         context['form'] = kwargs.get('form') or DirectionForm()
         context['edit_form'] = kwargs.get('edit_form')
         context['editing_id'] = kwargs.get('editing_id')
+        context['active_tab'] = 'directions'
         return context
 
     def post(self, request, *args, **kwargs):
@@ -1326,13 +1327,15 @@ class AdminDirectionsView(AdminRequiredMixin, ListView):
                 request,
                 f'Направление «{direction.title}» добавлено.',
             )
-            return HttpResponseRedirect(reverse('users:admin_directions'))
+            return HttpResponseRedirect(
+                reverse('catalog:curator_directions')
+            )
         self.object_list = self.get_queryset()
         context = self.get_context_data(form=form)
         return self.render_to_response(context)
 
 
-class AdminDirectionUpdateView(AdminRequiredMixin, View):
+class CuratorDirectionUpdateView(CuratorRequiredMixin, View):
     """Обработка редактирования направления через inline-форму."""
 
     http_method_names = ['get', 'post']
@@ -1340,7 +1343,7 @@ class AdminDirectionUpdateView(AdminRequiredMixin, View):
     def get(self, request, pk, *args, **kwargs):
         """Показывает список направлений с открытой формой редактирования."""
         direction = get_object_or_404(Direction, pk=pk)
-        view = AdminDirectionsView()
+        view = CuratorDirectionsView()
         view.setup(request)
         view.object_list = view.get_queryset()
         context = view.get_context_data(
@@ -1359,8 +1362,10 @@ class AdminDirectionUpdateView(AdminRequiredMixin, View):
                 request,
                 f'Направление «{direction.title}» обновлено.',
             )
-            return HttpResponseRedirect(reverse('users:admin_directions'))
-        view = AdminDirectionsView()
+            return HttpResponseRedirect(
+                reverse('catalog:curator_directions')
+            )
+        view = CuratorDirectionsView()
         view.setup(request)
         view.object_list = view.get_queryset()
         context = view.get_context_data(
@@ -1370,7 +1375,7 @@ class AdminDirectionUpdateView(AdminRequiredMixin, View):
         return view.render_to_response(context)
 
 
-class AdminDirectionDeleteView(AdminRequiredMixin, View):
+class CuratorDirectionDeleteView(CuratorRequiredMixin, View):
     """Удаление направления (если не используется в мероприятиях)."""
 
     http_method_names = ['post']
@@ -1391,14 +1396,14 @@ class AdminDirectionDeleteView(AdminRequiredMixin, View):
                 f'Нельзя удалить направление «{title}»: к нему привязаны '
                 f'мероприятия. Сначала смените направление у этих событий.',
             )
-        return redirect('users:admin_directions')
+        return redirect('catalog:curator_directions')
 
 
-class AdminEventTypesView(AdminRequiredMixin, ListView):
-    """Админ-страница управления типами мероприятий."""
+class CuratorEventTypesView(CuratorRequiredMixin, ListView):
+    """Кураторская страница управления типами мероприятий."""
 
     model = EventType
-    template_name = 'catalog/admin/event_types.html'
+    template_name = 'catalog/curator/event_types.html'
     context_object_name = 'event_types'
     paginate_by = 50
 
@@ -1416,6 +1421,7 @@ class AdminEventTypesView(AdminRequiredMixin, ListView):
         context['form'] = kwargs.get('form') or EventTypeForm()
         context['edit_form'] = kwargs.get('edit_form')
         context['editing_id'] = kwargs.get('editing_id')
+        context['active_tab'] = 'event_types'
         return context
 
     def post(self, request, *args, **kwargs):
@@ -1427,13 +1433,15 @@ class AdminEventTypesView(AdminRequiredMixin, ListView):
                 request,
                 f'Тип мероприятия «{event_type.title}» добавлен.',
             )
-            return HttpResponseRedirect(reverse('users:admin_event_types'))
+            return HttpResponseRedirect(
+                reverse('catalog:curator_event_types')
+            )
         self.object_list = self.get_queryset()
         context = self.get_context_data(form=form)
         return self.render_to_response(context)
 
 
-class AdminEventTypeUpdateView(AdminRequiredMixin, View):
+class CuratorEventTypeUpdateView(CuratorRequiredMixin, View):
     """Обработка редактирования типа мероприятия через inline-форму."""
 
     http_method_names = ['get', 'post']
@@ -1441,7 +1449,7 @@ class AdminEventTypeUpdateView(AdminRequiredMixin, View):
     def get(self, request, pk, *args, **kwargs):
         """Показывает список типов с открытой формой редактирования."""
         event_type = get_object_or_404(EventType, pk=pk)
-        view = AdminEventTypesView()
+        view = CuratorEventTypesView()
         view.setup(request)
         view.object_list = view.get_queryset()
         context = view.get_context_data(
@@ -1460,8 +1468,10 @@ class AdminEventTypeUpdateView(AdminRequiredMixin, View):
                 request,
                 f'Тип мероприятия «{event_type.title}» обновлён.',
             )
-            return HttpResponseRedirect(reverse('users:admin_event_types'))
-        view = AdminEventTypesView()
+            return HttpResponseRedirect(
+                reverse('catalog:curator_event_types')
+            )
+        view = CuratorEventTypesView()
         view.setup(request)
         view.object_list = view.get_queryset()
         context = view.get_context_data(
@@ -1471,7 +1481,7 @@ class AdminEventTypeUpdateView(AdminRequiredMixin, View):
         return view.render_to_response(context)
 
 
-class AdminEventTypeDeleteView(AdminRequiredMixin, View):
+class CuratorEventTypeDeleteView(CuratorRequiredMixin, View):
     """Удаление типа мероприятия (если не используется)."""
 
     http_method_names = ['post']
@@ -1492,7 +1502,7 @@ class AdminEventTypeDeleteView(AdminRequiredMixin, View):
                 f'Нельзя удалить тип «{title}»: к нему привязаны мероприятия. '
                 f'Сначала смените тип у этих событий.',
             )
-        return redirect('users:admin_event_types')
+        return redirect('catalog:curator_event_types')
 
 
 class AdminFeedbackTopicsView(AdminRequiredMixin, ListView):
