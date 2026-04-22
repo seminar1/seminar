@@ -649,3 +649,458 @@ class EventRegistration(models.Model):
                 'waitlist_position',
                 'updated_at',
             ])
+
+
+class FeedbackTopic(models.Model):
+    """Тема (категория) обращения в форме обратной связи.
+
+    Используется как справочник: позволяет администратору управлять
+    списком тем сообщений («Вопрос по мероприятию», «Сотрудничество»,
+    «Техническая проблема» и т.п.) без изменения кода.
+    """
+
+    title = models.CharField('Название', max_length=120, unique=True)
+    slug = models.SlugField('Слаг', max_length=120, unique=True, allow_unicode=True)
+    description = models.CharField(
+        'Краткое описание',
+        max_length=255,
+        blank=True,
+        help_text='Необязательная подсказка для пользователя при выборе темы.',
+    )
+    icon = models.CharField(
+        'Иконка',
+        max_length=60,
+        default='bi-chat-dots',
+        help_text='CSS-класс иконки Bootstrap Icons.',
+    )
+    order = models.PositiveIntegerField(
+        'Порядок',
+        default=100,
+        help_text='Темы с меньшим значением отображаются выше.',
+    )
+    is_active = models.BooleanField('Активная', default=True)
+    created_at = models.DateTimeField('Создано', auto_now_add=True)
+    updated_at = models.DateTimeField('Обновлено', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Тема обращения'
+        verbose_name_plural = 'Темы обращений'
+        ordering = ['order', 'title']
+
+    def __str__(self):
+        """Возвращает название темы."""
+        return self.title
+
+    def save(self, *args, **kwargs):
+        """Автоматически формирует slug, если он не задан."""
+        if not self.slug:
+            self.slug = slugify(self.title, allow_unicode=True)
+        super().save(*args, **kwargs)
+
+
+class FeedbackMessage(models.Model):
+    """Сообщение из формы обратной связи.
+
+    Позволяет отправлять обращения как авторизованным, так и анонимным
+    пользователям. Для авторизованных пользователей сохраняется ссылка
+    на учётную запись (``user``), но контактные данные (ФИО, email,
+    телефон) фиксируются «снимком» на момент отправки, чтобы сохранить
+    актуальную на тот момент информацию.
+
+    Дополнительно хранятся техническая метаинформация о запросе
+    (IP-адрес, User-Agent, реферер), связь с конкретным мероприятием
+    (если обращение касается события каталога) и внутренние поля для
+    обработки обращений администраторами.
+    """
+
+    class Status(models.TextChoices):
+        """Статус обработки обращения."""
+
+        NEW = 'new', 'Новое'
+        IN_PROGRESS = 'in_progress', 'В работе'
+        ANSWERED = 'answered', 'Отвечено'
+        CLOSED = 'closed', 'Закрыто'
+        SPAM = 'spam', 'Спам'
+
+    class Source(models.TextChoices):
+        """Источник, из которого пришло обращение."""
+
+        CONTACT_FORM = 'contact_form', 'Форма обратной связи'
+        EVENT_PAGE = 'event_page', 'Страница мероприятия'
+        FOOTER = 'footer', 'Подвал сайта'
+        OTHER = 'other', 'Другое'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Автор (если авторизован)',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='feedback_messages',
+        help_text=(
+            'Ссылка на учётную запись, если сообщение оставил '
+            'авторизованный пользователь. Для анонимных обращений — пусто.'
+        ),
+    )
+    topic = models.ForeignKey(
+        FeedbackTopic,
+        verbose_name='Тема обращения',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='messages',
+    )
+    related_event = models.ForeignKey(
+        Event,
+        verbose_name='Связанное мероприятие',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='feedback_messages',
+        help_text='Заполняется, если обращение касается конкретного мероприятия.',
+    )
+
+    full_name = models.CharField(
+        'Имя / ФИО',
+        max_length=255,
+        help_text='Как к вам обращаться.',
+    )
+    email = models.EmailField(
+        'Email для ответа',
+        help_text='Электронная почта, на которую придёт ответ.',
+    )
+    phone = models.CharField(
+        'Телефон',
+        max_length=32,
+        blank=True,
+        help_text='Необязательный контактный телефон.',
+    )
+    organization = models.CharField(
+        'Организация',
+        max_length=255,
+        blank=True,
+        help_text='Необязательно: место работы или учёбы.',
+    )
+
+    subject = models.CharField(
+        'Тема сообщения',
+        max_length=255,
+        blank=True,
+        help_text='Краткий заголовок обращения.',
+    )
+    message = models.TextField(
+        'Сообщение',
+        help_text='Текст обращения.',
+    )
+
+    consent_to_processing = models.BooleanField(
+        'Согласие на обработку персональных данных',
+        default=False,
+        help_text='Отмечается пользователем при отправке формы.',
+    )
+    subscribe_to_news = models.BooleanField(
+        'Подписаться на новости',
+        default=False,
+        help_text='Пользователь согласен получать новостную рассылку.',
+    )
+
+    ip_address = models.GenericIPAddressField(
+        'IP-адрес',
+        blank=True,
+        null=True,
+        help_text='IP отправителя для анти-спам проверок и аудита.',
+    )
+    user_agent = models.CharField(
+        'User-Agent',
+        max_length=500,
+        blank=True,
+    )
+    referer = models.URLField(
+        'Реферер',
+        max_length=500,
+        blank=True,
+        help_text='Страница, с которой была отправлена форма.',
+    )
+    source = models.CharField(
+        'Источник',
+        max_length=30,
+        choices=Source.choices,
+        default=Source.CONTACT_FORM,
+    )
+
+    status = models.CharField(
+        'Статус',
+        max_length=20,
+        choices=Status.choices,
+        default=Status.NEW,
+    )
+    admin_note = models.TextField(
+        'Внутренний комментарий',
+        blank=True,
+        help_text='Заметки администраторов, не видны пользователю.',
+    )
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Ответственный',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='assigned_feedback_messages',
+        help_text='Сотрудник, которому поручено обработать обращение.',
+    )
+
+    answered_at = models.DateTimeField(
+        'Дата ответа',
+        blank=True,
+        null=True,
+    )
+    answered_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Кто ответил',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='answered_feedback_messages',
+    )
+    answer_text = models.TextField(
+        'Текст ответа',
+        blank=True,
+        help_text='Итоговый ответ пользователю (опционально сохраняется для истории).',
+    )
+
+    created_at = models.DateTimeField('Создано', auto_now_add=True)
+    updated_at = models.DateTimeField('Обновлено', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Обращение обратной связи'
+        verbose_name_plural = 'Обращения обратной связи'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['email']),
+            models.Index(fields=['user', '-created_at']),
+        ]
+
+    def __str__(self):
+        """Возвращает краткое представление обращения для админки."""
+        subject = self.subject or (self.topic.title if self.topic_id else 'Без темы')
+        return f'{self.full_name} — {subject}'
+
+    @property
+    def is_anonymous(self):
+        """Оставлено ли обращение анонимным пользователем."""
+        return self.user_id is None
+
+    @property
+    def is_answered(self):
+        """Есть ли ответ на обращение."""
+        return self.status == self.Status.ANSWERED and self.answered_at is not None
+
+    @property
+    def display_subject(self):
+        """Отображаемая тема: явная тема обращения либо название категории."""
+        if self.subject:
+            return self.subject
+        if self.topic_id:
+            return self.topic.title
+        return 'Без темы'
+
+    def mark_answered(self, *, by=None, answer_text='', save=True):
+        """Помечает обращение как отвеченное.
+
+        Сохраняет автора ответа, момент ответа и опционально текст ответа.
+        """
+        self.status = self.Status.ANSWERED
+        self.answered_at = timezone.now()
+        if answer_text:
+            self.answer_text = answer_text
+        if by is not None and getattr(by, 'is_authenticated', False):
+            self.answered_by = by
+        if save:
+            self.save(update_fields=[
+                'status',
+                'answered_at',
+                'answered_by',
+                'answer_text',
+                'updated_at',
+            ])
+
+    def mark_spam(self, *, save=True):
+        """Помечает обращение как спам."""
+        self.status = self.Status.SPAM
+        if save:
+            self.save(update_fields=['status', 'updated_at'])
+
+
+class EventReview(models.Model):
+    """Отзыв / оценка мероприятия от участника.
+
+    Отдельная форма обратной связи, привязанная к конкретному
+    мероприятию: пользователь (в том числе анонимный) может оставить
+    оценку и комментарий. Для авторизованных пользователей сохраняется
+    ссылка на учётную запись, для анонимных — только контактный email
+    (опционально) и снимок имени.
+    """
+
+    class Status(models.TextChoices):
+        """Статус модерации отзыва."""
+
+        PENDING = 'pending', 'На модерации'
+        PUBLISHED = 'published', 'Опубликован'
+        REJECTED = 'rejected', 'Отклонён'
+        HIDDEN = 'hidden', 'Скрыт'
+
+    RATING_CHOICES = [
+        (1, '1 — очень плохо'),
+        (2, '2 — плохо'),
+        (3, '3 — нормально'),
+        (4, '4 — хорошо'),
+        (5, '5 — отлично'),
+    ]
+
+    event = models.ForeignKey(
+        Event,
+        verbose_name='Мероприятие',
+        on_delete=models.CASCADE,
+        related_name='reviews',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Автор (если авторизован)',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='event_reviews',
+    )
+
+    author_name = models.CharField(
+        'Имя автора',
+        max_length=255,
+        help_text='Как подписать отзыв. Снимок на момент отправки.',
+    )
+    author_email = models.EmailField(
+        'Email автора',
+        blank=True,
+        help_text='Необязательно для анонимных отзывов.',
+    )
+
+    rating = models.PositiveSmallIntegerField(
+        'Оценка',
+        choices=RATING_CHOICES,
+        help_text='Оценка мероприятия по шкале от 1 до 5.',
+    )
+    title = models.CharField(
+        'Заголовок',
+        max_length=255,
+        blank=True,
+    )
+    text = models.TextField(
+        'Текст отзыва',
+        help_text='Впечатления от мероприятия.',
+    )
+
+    pros = models.TextField(
+        'Плюсы',
+        blank=True,
+        help_text='Что особенно понравилось (опционально).',
+    )
+    cons = models.TextField(
+        'Минусы',
+        blank=True,
+        help_text='Что стоит улучшить (опционально).',
+    )
+
+    ip_address = models.GenericIPAddressField(
+        'IP-адрес',
+        blank=True,
+        null=True,
+    )
+    user_agent = models.CharField(
+        'User-Agent',
+        max_length=500,
+        blank=True,
+    )
+
+    status = models.CharField(
+        'Статус модерации',
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    moderation_note = models.TextField(
+        'Комментарий модератора',
+        blank=True,
+        help_text='Причина отклонения или внутренние заметки.',
+    )
+    moderated_at = models.DateTimeField(
+        'Проверено',
+        blank=True,
+        null=True,
+    )
+    moderated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Кто проверил',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='moderated_event_reviews',
+    )
+
+    created_at = models.DateTimeField('Создано', auto_now_add=True)
+    updated_at = models.DateTimeField('Обновлено', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Отзыв о мероприятии'
+        verbose_name_plural = 'Отзывы о мероприятиях'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['event', 'status', '-created_at']),
+            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['user', '-created_at']),
+        ]
+
+    def __str__(self):
+        """Возвращает строку вида «Автор → Мероприятие (оценка)»."""
+        return f'{self.author_name} → {self.event} ({self.rating})'
+
+    @property
+    def is_anonymous(self):
+        """Оставлен ли отзыв анонимным пользователем."""
+        return self.user_id is None
+
+    @property
+    def is_published(self):
+        """Отзыв прошёл модерацию и отображается публично."""
+        return self.status == self.Status.PUBLISHED
+
+    def mark_published(self, *, by=None, save=True):
+        """Публикует отзыв после модерации."""
+        self.status = self.Status.PUBLISHED
+        self.moderated_at = timezone.now()
+        if by is not None and getattr(by, 'is_authenticated', False):
+            self.moderated_by = by
+        if save:
+            self.save(update_fields=[
+                'status',
+                'moderated_at',
+                'moderated_by',
+                'updated_at',
+            ])
+
+    def mark_rejected(self, *, by=None, reason='', save=True):
+        """Отклоняет отзыв, сохраняя причину и модератора."""
+        self.status = self.Status.REJECTED
+        self.moderated_at = timezone.now()
+        if reason:
+            self.moderation_note = reason
+        if by is not None and getattr(by, 'is_authenticated', False):
+            self.moderated_by = by
+        if save:
+            self.save(update_fields=[
+                'status',
+                'moderated_at',
+                'moderated_by',
+                'moderation_note',
+                'updated_at',
+            ])
