@@ -402,3 +402,70 @@ class FeedbackMessageForm(forms.ModelForm):
                 '(минимум 10 символов).'
             )
         return message
+
+
+class FeedbackTopicForm(forms.ModelForm):
+    """Форма создания и редактирования темы обращений (админ-панель)."""
+
+    default_css_class = 'curator-form__input'
+
+    class Meta:
+        model = FeedbackTopic
+        fields = ('title', 'icon', 'description', 'order', 'is_active')
+        widgets = {
+            'title': forms.TextInput(
+                attrs={'placeholder': 'Например, «Вопрос по мероприятию»'}
+            ),
+            'icon': forms.TextInput(
+                attrs={'placeholder': 'bi-chat-dots'}
+            ),
+            'description': forms.Textarea(
+                attrs={
+                    'rows': 3,
+                    'placeholder': (
+                        'Необязательная подсказка, показываемая рядом '
+                        'с пунктом списка.'
+                    ),
+                }
+            ),
+            'order': forms.NumberInput(attrs={'min': 0, 'step': 1}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            if name == 'is_active':
+                field.widget.attrs.setdefault('class', 'curator-form__checkbox')
+                continue
+            widget = field.widget
+            existing = widget.attrs.get('class', '')
+            widget.attrs['class'] = (
+                f'{existing} {self.default_css_class}'.strip()
+            )
+
+
+class AdminFeedbackMessageStatusForm(forms.ModelForm):
+    """Компактная форма изменения статуса обращения администратором.
+
+    Используется на карточке обращения в админ-панели — содержит
+    только поле статуса. Прочие служебные поля (комментарии,
+    назначение ответственного) в интерфейсе не используются.
+    """
+
+    default_css_class = 'feedback-status-form__select'
+
+    class Meta:
+        model = FeedbackMessage
+        fields = ('status',)
+        widgets = {
+            'status': forms.Select(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            widget = field.widget
+            existing = widget.attrs.get('class', '')
+            widget.attrs['class'] = (
+                f'{existing} {self.default_css_class}'.strip()
+            )

@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Обращение #{{ feedback.pk }} — Админ-панель{% endblock %}
+
+{% block meta_description %}Карточка обращения обратной связи: контакты автора, текст сообщения и управление статусом.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/curator.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_feedback.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="admin-page">
+    <div class="container">
+        <header class="admin-page__header">
+            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+                <a href="{% url 'catalog:landing' %}">Главная</a>
+                <i class="bi bi-chevron-right"></i>
+                <a href="{% url 'users:admin_feedback_messages' %}">Обратная связь</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>Обращение #{{ feedback.pk }}</span>
+            </nav>
+            <div class="admin-page__titles">
+                <div>
+                    <span class="admin-page__eyebrow">
+                        <i class="bi bi-shield-lock"></i>
+                        Панель администратора
+                    </span>
+                    <h1 class="admin-page__title">
+                        {{ feedback.display_subject }}
+                    </h1>
+                    <p class="admin-page__lead">
+                        Обращение #{{ feedback.pk }} от {{ feedback.full_name }},
+                        получено {{ feedback.created_at|date:"d.m.Y H:i" }}.
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        <div class="feedback-detail">
+            <div class="feedback-detail__main">
+                <article class="feedback-detail-card">
+                    <header class="feedback-detail-card__header">
+                        <div class="feedback-detail-card__title-row">
+                            <h2 class="feedback-detail-card__title">
+                                <i class="bi bi-envelope"></i>
+                                Текст обращения
+                            </h2>
+                            <span class="feedback-status feedback-status--{{ feedback.status }}">
+                                {{ feedback.get_status_display }}
+                            </span>
+                        </div>
+                        {% if feedback.topic %}
+                            <div class="feedback-topic-chip">
+                                <i class="bi {{ feedback.topic.icon|default:'bi-chat-dots' }}"></i>
+                                {{ feedback.topic.title }}
+                            </div>
+                        {% endif %}
+                    </header>
+
+                    {% if feedback.subject %}
+                        <div class="feedback-detail-card__subject">
+                            {{ feedback.subject }}
+                        </div>
+                    {% endif %}
+
+                    <div class="feedback-detail-card__message">
+                        {{ feedback.message|linebreaksbr }}
+                    </div>
+
+                    {% if feedback.related_event %}
+                        <div class="feedback-detail-card__related">
+                            <span class="feedback-detail-card__related-label">Связанное мероприятие:</span>
+                            <a href="{% url 'catalog:event_detail' feedback.related_event.slug %}" target="_blank" rel="noopener">
+                                <i class="bi bi-calendar2-event"></i>
+                                {{ feedback.related_event.title }}
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" class="feedback-status-form">
+                        {% csrf_token %}
+                        <label for="{{ status_form.status.id_for_label }}" class="feedback-status-form__label">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Изменить статус обращения
+                        </label>
+                        <div class="feedback-status-form__row">
+                            {{ status_form.status }}
+                            <button type="submit" class="btn btn--primary">
+                                <i class="bi bi-save"></i>
+                                Сохранить
+                            </button>
+                            <a href="{% url 'users:admin_feedback_messages' %}" class="btn btn--ghost">
+                                <i class="bi bi-arrow-left"></i>
+                                К списку
+                            </a>
+                        </div>
+                        {% if status_form.status.errors %}
+                            <div class="curator-form__error">{{ status_form.status.errors.0 }}</div>
+                        {% endif %}
+                    </form>
+                </article>
+            </div>
+
+            <aside class="feedback-detail__aside">
+                <article class="feedback-detail-side">
+                    <h3 class="feedback-detail-side__title">
+                        <i class="bi bi-person-lines-fill"></i>
+                        Автор обращения
+                    </h3>
+                    <dl class="feedback-detail-side__list">
+                        <div>
+                            <dt>ФИО</dt>
+                            <dd>{{ feedback.full_name }}</dd>
+                        </div>
+                        <div>
+                            <dt>Email</dt>
+                            <dd>
+                                <a href="mailto:{{ feedback.email }}">{{ feedback.email }}</a>
+                            </dd>
+                        </div>
+                        {% if feedback.phone %}
+                            <div>
+                                <dt>Телефон</dt>
+                                <dd>
+                                    <a href="tel:{{ feedback.phone }}">{{ feedback.phone }}</a>
+                                </dd>
+                            </div>
+                        {% endif %}
+                        {% if feedback.organization %}
+                            <div>
+                                <dt>Организация</dt>
+                                <dd>{{ feedback.organization }}</dd>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <dt>Тип автора</dt>
+                            <dd>
+                                {% if feedback.user_id %}
+                                    <span class="feedback-author-badge feedback-author-badge--user">
+                                        <i class="bi bi-person-check"></i>
+                                        Авторизован —
+                                        <a href="{% url 'users:admin_users' %}">@{{ feedback.user.username }}</a>
+                                    </span>
+                                {% else %}
+                                    <span class="feedback-author-badge feedback-author-badge--anon">
+                                        <i class="bi bi-incognito"></i>
+                                        Анонимный посетитель
+                                    </span>
+                                {% endif %}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Рассылка</dt>
+                            <dd>
+                                {% if feedback.subscribe_to_news %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                    Подписан(а)
+                                {% else %}
+                                    Не подписан(а)
+                                {% endif %}
+                            </dd>
+                        </div>
+                    </dl>
+                </article>
+
+                <article class="feedback-detail-side">
+                    <h3 class="feedback-detail-side__title">
+                        <i class="bi bi-info-circle"></i>
+                        Мета-информация
+                    </h3>
+                    <dl class="feedback-detail-side__list">
+                        <div>
+                            <dt>Получено</dt>
+                            <dd>{{ feedback.created_at|date:"d.m.Y H:i" }}</dd>
+                        </div>
+                        <div>
+                            <dt>Обновлено</dt>
+                            <dd>{{ feedback.updated_at|date:"d.m.Y H:i" }}</dd>
+                        </div>
+                        <div>
+                            <dt>Источник</dt>
+                            <dd>{{ feedback.get_source_display }}</dd>
+                        </div>
+                    </dl>
+                </article>
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}

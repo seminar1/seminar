@@ -8,6 +8,11 @@ from catalog.views import (
     AdminEventTypeDeleteView,
     AdminEventTypesView,
     AdminEventTypeUpdateView,
+    AdminFeedbackMessageDetailView,
+    AdminFeedbackMessagesView,
+    AdminFeedbackTopicDeleteView,
+    AdminFeedbackTopicsView,
+    AdminFeedbackTopicUpdateView,
 )
 from users.views import (
     AdminUserRoleUpdateView,
@@ -58,5 +63,30 @@ urlpatterns = [
         'admin/event-types/<int:pk>/delete/',
         AdminEventTypeDeleteView.as_view(),
         name='admin_event_type_delete',
+    ),
+    path(
+        'admin/feedback-topics/',
+        AdminFeedbackTopicsView.as_view(),
+        name='admin_feedback_topics',
+    ),
+    path(
+        'admin/feedback-topics/<int:pk>/edit/',
+        AdminFeedbackTopicUpdateView.as_view(),
+        name='admin_feedback_topic_edit',
+    ),
+    path(
+        'admin/feedback-topics/<int:pk>/delete/',
+        AdminFeedbackTopicDeleteView.as_view(),
+        name='admin_feedback_topic_delete',
+    ),
+    path(
+        'admin/feedback/',
+        AdminFeedbackMessagesView.as_view(),
+        name='admin_feedback_messages',
+    ),
+    path(
+        'admin/feedback/<int:pk>/',
+        AdminFeedbackMessageDetailView.as_view(),
+        name='admin_feedback_message_detail',
     ),
 ]

@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Темы обращений — Админ-панель{% endblock %}
+
+{% block meta_description %}Управление справочником тем обращений формы обратной связи: создание, редактирование и удаление категорий.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/curator.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_feedback.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="admin-page">
+    <div class="container">
+        <header class="admin-page__header">
+            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+                <a href="{% url 'catalog:landing' %}">Главная</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>Админ-панель</span>
+            </nav>
+            <div class="admin-page__titles">
+                <div>
+                    <span class="admin-page__eyebrow">
+                        <i class="bi bi-shield-lock"></i>
+                        Панель администратора
+                    </span>
+                    <h1 class="admin-page__title">Темы обращений</h1>
+                    <p class="admin-page__lead">
+                        Управляйте списком тем, которые пользователь может
+                        выбрать в форме обратной связи. Темы помогают
+                        быстрее направлять обращения нужным специалистам.
+                    </p>
+                </div>
+            </div>
+            {% include 'users/admin/_tabs.html' with active_tab='feedback_topics' %}
+        </header>
+
+        <div class="admin-split">
+            <aside class="admin-split__aside">
+                {% if edit_form %}
+                    <div class="curator-form__section">
+                        <div class="curator-form__section-title">
+                            <i class="bi bi-pencil-square"></i>
+                            Редактирование темы
+                        </div>
+                        <form method="post" action="{% url 'users:admin_feedback_topic_edit' editing_id %}" class="admin-dict-form">
+                            {% csrf_token %}
+                            {% include 'catalog/admin/_feedback_topic_fields.html' with form=edit_form %}
+                            <div class="curator-form__actions">
+                                <a href="{% url 'users:admin_feedback_topics' %}" class="btn btn--ghost">Отмена</a>
+                                <button type="submit" class="btn btn--primary">Сохранить</button>
+                            </div>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="curator-form__section">
+                        <div class="curator-form__section-title">
+                            <i class="bi bi-plus-circle"></i>
+                            Добавить тему
+                        </div>
+                        <form method="post" action="{% url 'users:admin_feedback_topics' %}" class="admin-dict-form">
+                            {% csrf_token %}
+                            {% include 'catalog/admin/_feedback_topic_fields.html' with form=form %}
+                            <div class="curator-form__actions">
+                                <button type="submit" class="btn btn--primary">
+                                    <i class="bi bi-plus-lg"></i>
+                                    Добавить
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                {% endif %}
+            </aside>
+
+            <div class="admin-split__main">
+                <div class="admin-table-wrap">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Иконка</th>
+                                <th>Порядок</th>
+                                <th>Обращений</th>
+                                <th>Статус</th>
+                                <th class="admin-table__actions-col">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for topic in topics %}
+                                <tr>
+                                    <td>
+                                        <div class="curator-event">
+                                            <span class="curator-event__icon">
+                                                <i class="bi {{ topic.icon|default:'bi-chat-dots' }}"></i>
+                                            </span>
+                                            <div>
+                                                <div class="curator-event__title">{{ topic.title }}</div>
+                                                {% if topic.description %}
+                                                    <div class="curator-event__organizer">{{ topic.description|truncatechars:80 }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="admin-table__email">{{ topic.icon }}</td>
+                                    <td>{{ topic.order }}</td>
+                                    <td>{{ topic.messages_count }}</td>
+                                    <td>
+                                        {% if topic.is_active %}
+                                            <span class="status-badge status-badge--published">Активна</span>
+                                        {% else %}
+                                            <span class="status-badge status-badge--draft">Скрыта</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="admin-table__actions">
+                                            <a href="{% url 'users:admin_feedback_topic_edit' topic.pk %}" class="btn btn--ghost btn--sm">
+                                                <i class="bi bi-pencil"></i>
+                                                Изменить
+                                            </a>
+                                            <form method="post" action="{% url 'users:admin_feedback_topic_delete' topic.pk %}" class="admin-table__delete">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn--sm btn--danger" onclick="return confirm('Удалить тему «{{ topic.title|escapejs }}»? Связанные обращения сохранятся без темы.');">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="admin-table__empty">
+                                        <i class="bi bi-inbox"></i>
+                                        Тем обращений пока нет. Добавьте первую через форму слева.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% comment %}Общий блок полей формы темы обращения. Ожидает ``form``.{% endcomment %}
+{% if form.non_field_errors %}
+    <div class="auth-alert auth-alert--error">
+        <i class="bi bi-exclamation-triangle"></i>
+        <div>
+            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+<div class="curator-form__field">
+    <label for="{{ form.title.id_for_label }}" class="curator-form__label">
+        {{ form.title.label }} <span class="curator-form__required">*</span>
+    </label>
+    {{ form.title }}
+    {% if form.title.errors %}
+        <div class="curator-form__error">{{ form.title.errors.0 }}</div>
+    {% endif %}
+</div>
+
+<div class="curator-form__field">
+    <label for="{{ form.icon.id_for_label }}" class="curator-form__label">
+        {{ form.icon.label }}
+    </label>
+    {{ form.icon }}
+    <div class="curator-form__hint">
+        Класс из <a href="https://icons.getbootstrap.com" target="_blank" rel="noopener">Bootstrap Icons</a>, например <code>bi-chat-dots</code>.
+    </div>
+    {% if form.icon.errors %}
+        <div class="curator-form__error">{{ form.icon.errors.0 }}</div>
+    {% endif %}
+</div>
+
+<div class="curator-form__field">
+    <label for="{{ form.description.id_for_label }}" class="curator-form__label">
+        {{ form.description.label }}
+    </label>
+    {{ form.description }}
+    {% if form.description.errors %}
+        <div class="curator-form__error">{{ form.description.errors.0 }}</div>
+    {% endif %}
+</div>
+
+<div class="curator-form__field">
+    <label for="{{ form.order.id_for_label }}" class="curator-form__label">
+        {{ form.order.label }}
+    </label>
+    {{ form.order }}
+    <div class="curator-form__hint">
+        Меньшее значение — тема отображается выше в списке.
+    </div>
+    {% if form.order.errors %}
+        <div class="curator-form__error">{{ form.order.errors.0 }}</div>
+    {% endif %}
+</div>
+
+<label class="curator-form__toggle">
+    {{ form.is_active }}
+    <span>Активная (отображается в форме обратной связи)</span>
+</label>

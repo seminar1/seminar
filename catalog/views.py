@@ -16,17 +16,20 @@ from django.views.generic import (
 )
 
 from catalog.forms import (
+    AdminFeedbackMessageStatusForm,
     DirectionForm,
     EventForm,
     EventRegistrationForm,
     EventTypeForm,
     FeedbackMessageForm,
+    FeedbackTopicForm,
 )
 from catalog.models import (
     Direction,
     Event,
     EventRegistration,
     EventType,
+    FeedbackMessage,
     FeedbackTopic,
 )
 from users.mixins import AdminRequiredMixin, CuratorRequiredMixin
@@ -1277,3 +1280,231 @@ class AdminEventTypeDeleteView(AdminRequiredMixin, View):
                 f'Сначала смените тип у этих событий.',
             )
         return redirect('users:admin_event_types')
+
+
+class AdminFeedbackTopicsView(AdminRequiredMixin, ListView):
+    """Админ-страница управления темами обращений (CRUD).
+
+    Отображает список тем с количеством связанных обращений, форму
+    добавления новой темы и (при редактировании) inline-форму
+    редактирования — в том же стиле, что и справочники направлений
+    и типов мероприятий.
+    """
+
+    model = FeedbackTopic
+    template_name = 'catalog/admin/feedback_topics.html'
+    context_object_name = 'topics'
+    paginate_by = 50
+
+    def get_queryset(self):
+        """Возвращает темы обращений с подсчётом связанных сообщений."""
+        return (
+            FeedbackTopic.objects
+            .annotate(messages_count=Count('messages'))
+            .order_by('order', 'title')
+        )
+
+    def get_context_data(self, **kwargs):
+        """Добавляет форму создания и (опционально) редактирования темы."""
+        context = super().get_context_data(**kwargs)
+        context['form'] = kwargs.get('form') or FeedbackTopicForm()
+        context['edit_form'] = kwargs.get('edit_form')
+        context['editing_id'] = kwargs.get('editing_id')
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Создаёт новую тему обращения или возвращает форму с ошибками."""
+        form = FeedbackTopicForm(request.POST)
+        if form.is_valid():
+            topic = form.save()
+            messages.success(
+                request,
+                f'Тема обращения «{topic.title}» добавлена.',
+            )
+            return HttpResponseRedirect(reverse('users:admin_feedback_topics'))
+        self.object_list = self.get_queryset()
+        context = self.get_context_data(form=form)
+        return self.render_to_response(context)
+
+
+class AdminFeedbackTopicUpdateView(AdminRequiredMixin, View):
+    """Обработка редактирования темы обращения через inline-форму."""
+
+    http_method_names = ['get', 'post']
+
+    def get(self, request, pk, *args, **kwargs):
+        """Показывает список тем с открытой формой редактирования."""
+        topic = get_object_or_404(FeedbackTopic, pk=pk)
+        view = AdminFeedbackTopicsView()
+        view.setup(request)
+        view.object_list = view.get_queryset()
+        context = view.get_context_data(
+            edit_form=FeedbackTopicForm(instance=topic),
+            editing_id=topic.pk,
+        )
+        return view.render_to_response(context)
+
+    def post(self, request, pk, *args, **kwargs):
+        """Сохраняет изменения темы обращения."""
+        topic = get_object_or_404(FeedbackTopic, pk=pk)
+        form = FeedbackTopicForm(request.POST, instance=topic)
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request,
+                f'Тема обращения «{topic.title}» обновлена.',
+            )
+            return HttpResponseRedirect(reverse('users:admin_feedback_topics'))
+        view = AdminFeedbackTopicsView()
+        view.setup(request)
+        view.object_list = view.get_queryset()
+        context = view.get_context_data(
+            edit_form=form,
+            editing_id=topic.pk,
+        )
+        return view.render_to_response(context)
+
+
+class AdminFeedbackTopicDeleteView(AdminRequiredMixin, View):
+    """Удаление темы обращения из справочника."""
+
+    http_method_names = ['post']
+
+    def post(self, request, pk, *args, **kwargs):
+        """Удаляет тему; связанные обращения остаются (topic становится NULL)."""
+        topic = get_object_or_404(FeedbackTopic, pk=pk)
+        title = topic.title
+        topic.delete()
+        messages.success(
+            request,
+            f'Тема обращения «{title}» удалена. Связанные обращения сохранены '
+            f'без темы.',
+        )
+        return redirect('users:admin_feedback_topics')
+
+
+class AdminFeedbackMessagesView(AdminRequiredMixin, ListView):
+    """Админ-страница списка обращений обратной связи.
+
+    Поддерживает фильтрацию по статусу и теме, поиск по ФИО, email
+    и тексту сообщения, а также отображает сводную статистику
+    (всего, новые, в работе, отвеченные).
+    """
+
+    template_name = 'catalog/admin/feedback_messages.html'
+    context_object_name = 'messages_list'
+    paginate_by = 25
+
+    def get_queryset(self):
+        """Возвращает отфильтрованный и отсортированный список обращений."""
+        queryset = (
+            FeedbackMessage.objects
+            .select_related('topic', 'user', 'assigned_to', 'related_event')
+            .order_by('-created_at')
+        )
+
+        status = self.request.GET.get('status', '').strip()
+        if status and status in dict(FeedbackMessage.Status.choices):
+            queryset = queryset.filter(status=status)
+
+        topic_id = self.request.GET.get('topic', '').strip()
+        if topic_id.isdigit():
+            queryset = queryset.filter(topic_id=int(topic_id))
+
+        search_query = self.request.GET.get('q', '').strip()
+        if search_query:
+            queryset = queryset.filter(
+                Q(full_name__icontains=search_query)
+                | Q(email__icontains=search_query)
+                | Q(subject__icontains=search_query)
+                | Q(message__icontains=search_query)
+            )
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        """Передаёт в шаблон фильтры, статистику и справочники."""
+        context = super().get_context_data(**kwargs)
+        base_queryset = FeedbackMessage.objects.all()
+        context['total_count'] = base_queryset.count()
+        context['new_count'] = base_queryset.filter(
+            status=FeedbackMessage.Status.NEW
+        ).count()
+        context['in_progress_count'] = base_queryset.filter(
+            status=FeedbackMessage.Status.IN_PROGRESS
+        ).count()
+        context['answered_count'] = base_queryset.filter(
+            status=FeedbackMessage.Status.ANSWERED
+        ).count()
+
+        context['status_choices'] = FeedbackMessage.Status.choices
+        context['topics'] = (
+            FeedbackTopic.objects
+            .order_by('order', 'title')
+        )
+        context['current_status'] = self.request.GET.get('status', '').strip()
+        context['current_topic'] = self.request.GET.get('topic', '').strip()
+        context['search_query'] = self.request.GET.get('q', '').strip()
+        return context
+
+
+class AdminFeedbackMessageDetailView(AdminRequiredMixin, View):
+    """Страница просмотра отдельного обращения обратной связи.
+
+    Показывает все данные обращения — контакты автора, текст
+    сообщения, связанное мероприятие и техническую мета-информацию.
+    Из управляющих действий доступно только изменение статуса
+    обработки (новое → в работе → отвечено → закрыто и т.п.).
+    """
+
+    http_method_names = ['get', 'post']
+    template_name = 'catalog/admin/feedback_message_detail.html'
+
+    def _get_feedback(self, pk):
+        """Загружает обращение с предвыбранными связями."""
+        return get_object_or_404(
+            FeedbackMessage.objects.select_related(
+                'topic', 'user', 'related_event'
+            ),
+            pk=pk,
+        )
+
+    def _build_context(self, feedback, status_form):
+        """Формирует общий контекст шаблона для GET и POST."""
+        return {
+            'feedback': feedback,
+            'status_form': status_form,
+        }
+
+    def get(self, request, pk, *args, **kwargs):
+        """Отображает карточку обращения с компактным переключателем статуса."""
+        feedback = self._get_feedback(pk)
+        status_form = AdminFeedbackMessageStatusForm(instance=feedback)
+        return render(
+            request,
+            self.template_name,
+            self._build_context(feedback, status_form),
+        )
+
+    def post(self, request, pk, *args, **kwargs):
+        """Сохраняет новый статус обращения."""
+        feedback = self._get_feedback(pk)
+        status_form = AdminFeedbackMessageStatusForm(
+            request.POST, instance=feedback
+        )
+        if status_form.is_valid():
+            status_form.save()
+            messages.success(
+                request,
+                f'Статус обращения #{feedback.pk} обновлён: '
+                f'«{feedback.get_status_display()}».',
+            )
+            return redirect(
+                'users:admin_feedback_message_detail', pk=feedback.pk
+            )
+
+        return render(
+            request,
+            self.template_name,
+            self._build_context(feedback, status_form),
+        )

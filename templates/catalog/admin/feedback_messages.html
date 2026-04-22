@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Обратная связь — Админ-панель{% endblock %}
+
+{% block meta_description %}Раздел админ-панели для проверки обращений пользователей: просмотр, фильтрация, смена статусов и назначение ответственных.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_feedback.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="admin-page">
+    <div class="container">
+        <header class="admin-page__header">
+            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+                <a href="{% url 'catalog:landing' %}">Главная</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>Админ-панель</span>
+            </nav>
+            <div class="admin-page__titles">
+                <div>
+                    <span class="admin-page__eyebrow">
+                        <i class="bi bi-shield-lock"></i>
+                        Панель администратора
+                    </span>
+                    <h1 class="admin-page__title">Обращения обратной связи</h1>
+                    <p class="admin-page__lead">
+                        Просматривайте сообщения от пользователей, меняйте
+                        статус обработки, назначайте ответственных сотрудников
+                        и фиксируйте ответы.
+                    </p>
+                </div>
+            </div>
+            {% include 'users/admin/_tabs.html' with active_tab='feedback_messages' %}
+        </header>
+
+        <div class="admin-stats">
+            <div class="admin-stat">
+                <div class="admin-stat__value">{{ total_count }}</div>
+                <div class="admin-stat__label">Всего обращений</div>
+            </div>
+            <div class="admin-stat admin-stat--admin">
+                <div class="admin-stat__value">{{ new_count }}</div>
+                <div class="admin-stat__label">Новых</div>
+            </div>
+            <div class="admin-stat admin-stat--curator">
+                <div class="admin-stat__value">{{ in_progress_count }}</div>
+                <div class="admin-stat__label">В работе</div>
+            </div>
+            <div class="admin-stat admin-stat--user">
+                <div class="admin-stat__value">{{ answered_count }}</div>
+                <div class="admin-stat__label">Отвечено</div>
+            </div>
+        </div>
+
+        <form method="get" class="admin-filters">
+            <div class="admin-filters__search">
+                <i class="bi bi-search"></i>
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Поиск по ФИО, email, тексту обращения"
+                    class="admin-filters__input"
+                >
+            </div>
+            <div class="admin-filters__select-wrap">
+                <select name="status" class="admin-filters__select">
+                    <option value="">Все статусы</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="admin-filters__select-wrap">
+                <select name="topic" class="admin-filters__select">
+                    <option value="">Все темы</option>
+                    {% for topic in topics %}
+                        <option value="{{ topic.pk }}" {% if current_topic == topic.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ topic.title }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn--primary">
+                <i class="bi bi-funnel"></i>
+                Применить
+            </button>
+            {% if current_status or current_topic or search_query %}
+                <a href="{% url 'users:admin_feedback_messages' %}" class="btn btn--ghost">
+                    <i class="bi bi-x-circle"></i>
+                    Сбросить
+                </a>
+            {% endif %}
+        </form>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Автор</th>
+                        <th>Тема</th>
+                        <th>Сообщение</th>
+                        <th>Статус</th>
+                        <th>Получено</th>
+                        <th class="admin-table__actions-col">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in messages_list %}
+                        <tr>
+                            <td>
+                                <div class="admin-user">
+                                    <span class="admin-user__avatar">
+                                        {{ item.full_name|slice:":1"|upper }}
+                                    </span>
+                                    <div>
+                                        <div class="admin-user__name">{{ item.full_name }}</div>
+                                        <div class="admin-user__login">{{ item.email }}</div>
+                                        {% if item.user_id %}
+                                            <span class="feedback-author-badge feedback-author-badge--user">
+                                                <i class="bi bi-person-check"></i>
+                                                Авторизован
+                                            </span>
+                                        {% else %}
+                                            <span class="feedback-author-badge feedback-author-badge--anon">
+                                                <i class="bi bi-incognito"></i>
+                                                Анонимно
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if item.topic %}
+                                    <div class="feedback-topic-chip">
+                                        <i class="bi {{ item.topic.icon|default:'bi-chat-dots' }}"></i>
+                                        {{ item.topic.title }}
+                                    </div>
+                                {% else %}
+                                    <span class="admin-table__hint">Без темы</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="feedback-msg-preview">
+                                    {% if item.subject %}
+                                        <div class="feedback-msg-preview__subject">{{ item.subject }}</div>
+                                    {% endif %}
+                                    <div class="feedback-msg-preview__text">
+                                        {{ item.message|truncatechars:120 }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="feedback-status feedback-status--{{ item.status }}">
+                                    {{ item.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="admin-table__date">
+                                {{ item.created_at|date:"d.m.Y" }}<br>
+                                <span class="admin-table__email">{{ item.created_at|date:"H:i" }}</span>
+                            </td>
+                            <td>
+                                <div class="admin-table__actions">
+                                    <a href="{% url 'users:admin_feedback_message_detail' item.pk %}" class="btn btn--primary btn--sm">
+                                        <i class="bi bi-eye"></i>
+                                        Открыть
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="admin-table__empty">
+                                <i class="bi bi-inbox"></i>
+                                Обращений пока нет
+                                {% if current_status or current_topic or search_query %}
+                                    по заданным фильтрам
+                                {% endif %}.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+            <div class="admin-pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_topic %}&topic={{ current_topic }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="admin-pagination__link">
+                        <i class="bi bi-chevron-left"></i>
+                        Назад
+                    </a>
+                {% endif %}
+                <span class="admin-pagination__info">
+                    Страница {{ page_obj.number }} из {{ paginator.num_pages }}
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_topic %}&topic={{ current_topic }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="admin-pagination__link">
+                        Вперёд
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

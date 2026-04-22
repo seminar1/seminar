@@ -1,0 +1,420 @@
+/* Стили раздела «Обратная связь» в админ-панели.
+   Используется на страницах списка обращений, карточки обращения
+   и справочника тем. Дополняет общий admin.css. */
+
+
+.feedback-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.feedback-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.feedback-status--new {
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+}
+
+.feedback-status--in_progress {
+    background: rgba(255, 183, 0, 0.14);
+    color: #a97400;
+}
+
+.feedback-status--answered {
+    background: rgba(25, 195, 125, 0.14);
+    color: #0f7a4b;
+}
+
+.feedback-status--closed {
+    background: rgba(90, 101, 131, 0.14);
+    color: #384364;
+}
+
+.feedback-status--spam {
+    background: rgba(216, 58, 82, 0.14);
+    color: #a02334;
+}
+
+
+.feedback-topic-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(143, 91, 255, 0.12);
+    color: #6c3dd8;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.feedback-topic-chip i {
+    font-size: 13px;
+}
+
+
+.feedback-author-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.feedback-author-badge i {
+    font-size: 12px;
+}
+
+.feedback-author-badge--user {
+    background: rgba(25, 195, 125, 0.12);
+    color: #0f7a4b;
+}
+
+.feedback-author-badge--anon {
+    background: var(--color-surface-alt);
+    color: var(--color-text-muted);
+}
+
+
+.feedback-msg-preview {
+    max-width: 420px;
+}
+
+.feedback-msg-preview__subject {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.feedback-msg-preview__text {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.status-badge--published {
+    background: rgba(25, 195, 125, 0.14);
+    color: #0f7a4b;
+}
+
+.status-badge--draft {
+    background: var(--color-surface-alt);
+    color: var(--color-text-muted);
+}
+
+
+.feedback-detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.feedback-detail__main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+}
+
+.feedback-detail__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    position: sticky;
+    top: 100px;
+}
+
+
+.feedback-detail-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+}
+
+.feedback-detail-card__header {
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.feedback-detail-card__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.feedback-detail-card__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.feedback-detail-card__title i {
+    color: var(--color-primary);
+    font-size: 18px;
+}
+
+.feedback-detail-card__subject {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 12px;
+}
+
+.feedback-detail-card__message {
+    font-size: 15px;
+    color: var(--color-text);
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.feedback-detail-card__related {
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: var(--color-surface-alt);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.feedback-detail-card__related-label {
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.feedback-detail-card__related a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+
+
+.feedback-status-form {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.feedback-status-form__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.feedback-status-form__label i {
+    color: var(--color-primary);
+    font-size: 14px;
+}
+
+.feedback-status-form__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.feedback-status-form__select {
+    flex: 1 1 260px;
+    min-width: 220px;
+    padding: 11px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.feedback-status-form__select:hover {
+    border-color: #c8d1ea;
+}
+
+.feedback-status-form__select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px var(--color-primary-soft);
+}
+
+
+.feedback-detail-side {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    box-shadow: var(--shadow-sm);
+}
+
+.feedback-detail-side__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.feedback-detail-side__title i {
+    color: var(--color-primary);
+    font-size: 16px;
+}
+
+.feedback-detail-side__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+}
+
+.feedback-detail-side__list > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--color-border);
+}
+
+.feedback-detail-side__list > div:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.feedback-detail-side__list dt {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.feedback-detail-side__list dd {
+    font-size: 14px;
+    color: var(--color-text);
+    margin: 0;
+    word-break: break-word;
+}
+
+.feedback-detail-side__list dd a {
+    font-weight: 600;
+}
+
+.feedback-detail-side__list dd code {
+    background: var(--color-surface-alt);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.feedback-detail-side__ua {
+    display: inline-block;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+}
+
+.feedback-detail-side__link {
+    font-size: 13px;
+}
+
+
+@media (max-width: 1100px) {
+    .feedback-detail {
+        grid-template-columns: 1fr;
+    }
+
+    .feedback-detail__aside {
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .feedback-detail__aside {
+        grid-template-columns: 1fr;
+    }
+
+    .feedback-detail-card {
+        padding: 22px;
+    }
+
+    .feedback-status-form__row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .feedback-status-form__select,
+    .feedback-status-form__row .btn {
+        width: 100%;
+    }
+}
