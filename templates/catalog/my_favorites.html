@@ -14,13 +14,7 @@
 {% block content %}
 <section class="admin-page my-reg my-favorites">
     <div class="container">
-        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
-            <a href="{% url 'catalog:landing' %}">Главная</a>
-            <i class="bi bi-chevron-right"></i>
-            <a href="{% url 'catalog:dashboard' %}">Личный кабинет</a>
-            <i class="bi bi-chevron-right"></i>
-            <span>Избранное</span>
-        </nav>
+        {% include 'includes/breadcrumbs_cabinet.html' with current='Избранное' %}
 
         <header class="my-reg__header">
             <div>

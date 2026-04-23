@@ -13,13 +13,7 @@
 {% block content %}
 <section class="my-reg">
     <div class="container">
-        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
-            <a href="{% url 'catalog:landing' %}">Главная</a>
-            <i class="bi bi-chevron-right"></i>
-            <a href="{% url 'catalog:dashboard' %}">Личный кабинет</a>
-            <i class="bi bi-chevron-right"></i>
-            <span>Мои заявки</span>
-        </nav>
+        {% include 'includes/breadcrumbs_cabinet.html' with current='Мои заявки' %}
 
         <header class="my-reg__header">
             <div>

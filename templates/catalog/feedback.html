@@ -16,13 +16,8 @@
         <span class="feedback-hero__blob feedback-hero__blob--2"></span>
     </div>
     <div class="container feedback-hero__inner">
-        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
-            <a href="{% url 'catalog:landing' %}">Главная</a>
-            <i class="bi bi-chevron-right"></i>
-            <a href="{% url 'catalog:contacts' %}">Контакты</a>
-            <i class="bi bi-chevron-right"></i>
-            <span>Обратная связь</span>
-        </nav>
+        {% url 'catalog:contacts' as u_contacts %}
+        {% include 'includes/breadcrumbs_3.html' with parent_url=u_contacts parent_label='Контакты' current='Обратная связь' %}
         <span class="feedback-hero__eyebrow">
             <i class="bi bi-chat-left-dots"></i>
             Мы на связи

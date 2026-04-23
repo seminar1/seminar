@@ -1,0 +1,17 @@
+{% comment %}
+  Главная > Админ-панель (пользователи) > {{ current }}.
+  Использование: {% include 'includes/breadcrumbs_admin.html' with current='Статистика' %}
+{% endcomment %}
+<nav class="site-breadcrumbs" aria-label="Навигационная цепочка">
+    <ol class="site-breadcrumbs__list">
+        <li class="site-breadcrumbs__item">
+            <a class="site-breadcrumbs__link" href="{% url 'catalog:landing' %}">Главная</a>
+        </li>
+        <li class="site-breadcrumbs__item">
+            <a class="site-breadcrumbs__link" href="{% url 'users:admin_users' %}">Админ-панель</a>
+        </li>
+        <li class="site-breadcrumbs__item">
+            <span class="site-breadcrumbs__current" aria-current="page">{{ current }}</span>
+        </li>
+    </ol>
+</nav>

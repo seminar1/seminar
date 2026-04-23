@@ -16,11 +16,7 @@
         <span class="events-hero__blob events-hero__blob--2"></span>
     </div>
     <div class="container events-hero__inner">
-        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
-            <a href="{% url 'catalog:landing' %}">Главная</a>
-            <i class="bi bi-chevron-right"></i>
-            <span>Каталог мероприятий</span>
-        </nav>
+        {% include 'includes/breadcrumbs_2.html' with current='Каталог мероприятий' %}
         <span class="events-hero__eyebrow">
             <i class="bi bi-calendar2-event"></i>
             Афиша научного центра
@@ -114,12 +110,14 @@
                 data-format="{{ event.event_format }}"
                 data-haystack="{{ event.title|lower }} {{ event.short_description|lower }} {{ event.description|lower }} {{ event.location|lower }}">
                 <div class="event-item__media">
-                    <div class="event-item__bookmark">
-                        {% include 'catalog/_event_bookmark_button.html' with event=event %}
-                    </div>
-                    <div class="event-item__date">
-                        <span class="event-item__day">{{ event.date_day }}</span>
-                        <span class="event-item__month">{{ event.date_month_short }}</span>
+                    <div class="event-item__media-left">
+                        <div class="event-item__bookmark">
+                            {% include 'catalog/_event_bookmark_button.html' with event=event %}
+                        </div>
+                        <div class="event-item__date">
+                            <span class="event-item__day">{{ event.date_day }}</span>
+                            <span class="event-item__month">{{ event.date_month_short }}</span>
+                        </div>
                     </div>
                     <span class="event-item__badge event-item__badge--{{ event.status_slug }}">
                         <i class="bi bi-circle-fill"></i>

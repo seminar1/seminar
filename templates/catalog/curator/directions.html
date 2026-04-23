@@ -14,11 +14,7 @@
 <section class="admin-page">
     <div class="container">
         <header class="admin-page__header">
-            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
-                <a href="{% url 'catalog:landing' %}">Главная</a>
-                <i class="bi bi-chevron-right"></i>
-                <span>Панель куратора</span>
-            </nav>
+            {% include 'includes/breadcrumbs_curator.html' with current='Направления' %}
             <div class="curator-header">
                 <div>
                     <span class="admin-page__eyebrow curator-header__eyebrow">

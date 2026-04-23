@@ -289,15 +289,22 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 20px;
 }
 
-/* Кнопка «Избранное» в шапке карточки каталога */
+/* Левая колонка: «избранное» + дата в одной группе — не пересекается с бейджем статуса */
+.event-item__media-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    flex: 0 1 auto;
+}
+
+/* Кнопка «Избранное» в шапке карточки каталога (в потоке, слева от даты) */
 .event-item__bookmark {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 2;
+    position: static;
+    flex-shrink: 0;
 }
 
 .event-bookmark__form {

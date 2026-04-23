@@ -1,0 +1,17 @@
+{% comment %}
+  Главная > Панель куратора (список мероприятий) > {{ current }}.
+  Использование: {% include 'includes/breadcrumbs_curator.html' with current='Мероприятия' %}
+{% endcomment %}
+<nav class="site-breadcrumbs" aria-label="Навигационная цепочка">
+    <ol class="site-breadcrumbs__list">
+        <li class="site-breadcrumbs__item">
+            <a class="site-breadcrumbs__link" href="{% url 'catalog:landing' %}">Главная</a>
+        </li>
+        <li class="site-breadcrumbs__item">
+            <a class="site-breadcrumbs__link" href="{% url 'catalog:curator_events' %}">Панель куратора</a>
+        </li>
+        <li class="site-breadcrumbs__item">
+            <span class="site-breadcrumbs__current" aria-current="page">{{ current }}</span>
+        </li>
+    </ol>
+</nav>

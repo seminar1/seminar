@@ -34,6 +34,12 @@
     background: radial-gradient(circle, var(--color-accent-soft), transparent 70%);
 }
 
+/* Хлебные крошки над сеткой входа/регистрации (полная ширина контейнера) */
+.auth-page__breadcrumbs {
+    margin-bottom: 20px;
+    padding-top: 8px;
+}
+
 .auth-page__inner {
     position: relative;
     z-index: 1;

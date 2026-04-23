@@ -15,11 +15,7 @@
 <section class="admin-page">
     <div class="container">
         <header class="admin-page__header">
-            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
-                <a href="{% url 'catalog:landing' %}">Главная</a>
-                <i class="bi bi-chevron-right"></i>
-                <span>Админ-панель</span>
-            </nav>
+            {% include 'includes/breadcrumbs_admin.html' with current='Статистика и отчёты' %}
             <div class="admin-page__titles">
                 <div>
                     <span class="admin-page__eyebrow">

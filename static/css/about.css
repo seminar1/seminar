@@ -41,33 +41,7 @@
     max-width: 860px;
 }
 
-.breadcrumbs {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: var(--color-text-muted);
-    margin-bottom: 24px;
-    background: rgba(255, 255, 255, 0.7);
-    padding: 8px 14px;
-    border-radius: 999px;
-    border: 1px solid var(--color-border);
-}
-
-.breadcrumbs a {
-    color: var(--color-primary-dark);
-    font-weight: 500;
-}
-
-.breadcrumbs span {
-    color: var(--color-text);
-    font-weight: 600;
-}
-
-.breadcrumbs i {
-    font-size: 11px;
-    color: var(--color-text-muted);
-}
+/* Хлебные крошки: единый стиль в base.css (.site-breadcrumbs) */
 
 .about-hero__eyebrow {
     display: inline-flex;

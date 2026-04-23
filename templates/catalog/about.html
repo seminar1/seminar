@@ -16,11 +16,7 @@
         <span class="about-hero__blob about-hero__blob--2"></span>
     </div>
     <div class="container about-hero__inner">
-        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
-            <a href="{% url 'catalog:landing' %}">Главная</a>
-            <i class="bi bi-chevron-right"></i>
-            <span>О нас</span>
-        </nav>
+        {% include 'includes/breadcrumbs_2.html' with current='О нас' %}
         <span class="about-hero__eyebrow">
             <i class="bi bi-building"></i>
             МУИВ им. С.Ю. Витте

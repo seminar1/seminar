@@ -6,27 +6,7 @@
     margin-bottom: 32px;
 }
 
-.breadcrumbs {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--color-text-muted);
-    font-size: 14px;
-    margin-bottom: 20px;
-}
-
-.breadcrumbs a {
-    color: var(--color-text-muted);
-}
-
-.breadcrumbs a:hover {
-    color: var(--color-primary);
-}
-
-.breadcrumbs i {
-    font-size: 12px;
-    opacity: 0.6;
-}
+/* Хлебные крошки: общие стили в base.css (.site-breadcrumbs) */
 
 .admin-page__eyebrow {
     display: inline-flex;

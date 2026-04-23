@@ -1,0 +1,14 @@
+{% comment %}
+  Двухуровневые крошки: Главная > {{ current }}.
+  Использование: {% include 'includes/breadcrumbs_2.html' with current='О нас' %}
+{% endcomment %}
+<nav class="site-breadcrumbs" aria-label="Навигационная цепочка">
+    <ol class="site-breadcrumbs__list">
+        <li class="site-breadcrumbs__item">
+            <a class="site-breadcrumbs__link" href="{% url 'catalog:landing' %}">Главная</a>
+        </li>
+        <li class="site-breadcrumbs__item">
+            <span class="site-breadcrumbs__current" aria-current="page">{{ current }}</span>
+        </li>
+    </ol>
+</nav>

@@ -19,11 +19,7 @@
 <section class="settings-page">
     <div class="container">
         <header class="settings-hero">
-            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
-                <a href="{% url 'catalog:landing' %}">Главная</a>
-                <i class="bi bi-chevron-right"></i>
-                <span>Настройки</span>
-            </nav>
+            {% include 'includes/breadcrumbs_cabinet.html' with current='Настройки' %}
             <span class="settings-hero__eyebrow">
                 <i class="bi bi-gear"></i>
                 Личный кабинет

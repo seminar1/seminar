@@ -1,0 +1,19 @@
+{% comment %}
+  Три уровня: Главная > вторая (ссылка) > {{ current }}.
+  Использование:
+  {% include 'includes/breadcrumbs_3.html' with parent_url=... parent_label='...' current='...' %}
+  parent_url — полный путь, например {% url 'catalog:events' %}
+{% endcomment %}
+<nav class="site-breadcrumbs" aria-label="Навигационная цепочка">
+    <ol class="site-breadcrumbs__list">
+        <li class="site-breadcrumbs__item">
+            <a class="site-breadcrumbs__link" href="{% url 'catalog:landing' %}">Главная</a>
+        </li>
+        <li class="site-breadcrumbs__item">
+            <a class="site-breadcrumbs__link" href="{{ parent_url }}">{{ parent_label }}</a>
+        </li>
+        <li class="site-breadcrumbs__item">
+            <span class="site-breadcrumbs__current" aria-current="page">{{ current }}</span>
+        </li>
+    </ol>
+</nav>

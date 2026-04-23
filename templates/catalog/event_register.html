@@ -12,14 +12,21 @@
 {% block content %}
 <section class="reg-page">
     <div class="container reg-page__inner">
-        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
-            <a href="{% url 'catalog:landing' %}">Главная</a>
-            <i class="bi bi-chevron-right"></i>
-            <a href="{% url 'catalog:events' %}">Каталог мероприятий</a>
-            <i class="bi bi-chevron-right"></i>
-            <a href="{% url 'catalog:event_detail' event.slug %}">{{ event.title|truncatechars:32 }}</a>
-            <i class="bi bi-chevron-right"></i>
-            <span>Заявка на участие</span>
+        <nav class="site-breadcrumbs" aria-label="Навигационная цепочка">
+            <ol class="site-breadcrumbs__list">
+                <li class="site-breadcrumbs__item">
+                    <a class="site-breadcrumbs__link" href="{% url 'catalog:landing' %}">Главная</a>
+                </li>
+                <li class="site-breadcrumbs__item">
+                    <a class="site-breadcrumbs__link" href="{% url 'catalog:events' %}">Каталог мероприятий</a>
+                </li>
+                <li class="site-breadcrumbs__item">
+                    <a class="site-breadcrumbs__link" href="{% url 'catalog:event_detail' event.slug %}">{{ event.title|truncatechars:32 }}</a>
+                </li>
+                <li class="site-breadcrumbs__item">
+                    <span class="site-breadcrumbs__current" aria-current="page">Заявка на участие</span>
+                </li>
+            </ol>
         </nav>
 
         <div class="reg-layout">

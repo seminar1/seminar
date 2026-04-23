@@ -18,13 +18,10 @@
     </div>
 
     <div class="container event-hero__inner">
-        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
-            <a href="{% url 'catalog:landing' %}">Главная</a>
-            <i class="bi bi-chevron-right"></i>
-            <a href="{% url 'catalog:events' %}">Каталог мероприятий</a>
-            <i class="bi bi-chevron-right"></i>
-            <span>{{ event.title|truncatechars:40 }}</span>
-        </nav>
+        {% url 'catalog:events' as u_events_list %}
+        {% with t=event.title|truncatechars:40 %}
+        {% include 'includes/breadcrumbs_3.html' with parent_url=u_events_list parent_label='Каталог мероприятий' current=t %}
+        {% endwith %}
 
         <div class="event-hero__layout">
             <div class="event-hero__main">

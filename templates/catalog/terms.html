@@ -16,11 +16,7 @@
         <span class="privacy-hero__blob privacy-hero__blob--2"></span>
     </div>
     <div class="container privacy-hero__inner">
-        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
-            <a href="{% url 'catalog:landing' %}">Главная</a>
-            <i class="bi bi-chevron-right"></i>
-            <span>Пользовательское соглашение</span>
-        </nav>
+        {% include 'includes/breadcrumbs_2.html' with current='Пользовательское соглашение' %}
         <span class="privacy-hero__eyebrow">
             <i class="bi bi-file-earmark-text"></i>
             Правовой документ
