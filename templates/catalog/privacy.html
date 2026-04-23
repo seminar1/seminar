@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Политика конфиденциальности — Научный Центр МУИВ им. С.Ю. Витте{% endblock %}
+
+{% block meta_description %}Политика конфиденциальности электронного каталога научных мероприятий МУИВ им. С.Ю. Витте: какие персональные данные мы обрабатываем, цели, сроки хранения, права пользователей и меры защиты.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/privacy.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="privacy-hero">
+    <div class="privacy-hero__backdrop" aria-hidden="true">
+        <span class="privacy-hero__blob privacy-hero__blob--1"></span>
+        <span class="privacy-hero__blob privacy-hero__blob--2"></span>
+    </div>
+    <div class="container privacy-hero__inner">
+        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+            <a href="{% url 'catalog:landing' %}">Главная</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Политика конфиденциальности</span>
+        </nav>
+        <span class="privacy-hero__eyebrow">
+            <i class="bi bi-shield-lock"></i>
+            Правовой документ
+        </span>
+        <h1 class="privacy-hero__title">
+            Политика <span class="privacy-hero__title-accent">конфиденциальности</span>
+        </h1>
+        <p class="privacy-hero__lead">
+            Мы уважаем ваше право на приватность и обрабатываем персональные
+            данные в строгом соответствии с законодательством Российской
+            Федерации. Здесь описано, какие данные мы собираем, зачем и как
+            их защищаем.
+        </p>
+
+        <dl class="privacy-hero__meta">
+            <div class="privacy-hero__meta-item">
+                <dt>Действует с</dt>
+                <dd>{{ effective_date }}</dd>
+            </div>
+            <div class="privacy-hero__meta-item">
+                <dt>Последнее обновление</dt>
+                <dd>{{ last_updated }}</dd>
+            </div>
+            <div class="privacy-hero__meta-item">
+                <dt>Оператор</dt>
+                <dd>{{ operator.short_name }}</dd>
+            </div>
+        </dl>
+    </div>
+</section>
+
+<section class="privacy-highlights">
+    <div class="container">
+        <div class="privacy-highlights__grid">
+            {% for item in highlights %}
+            <article class="privacy-highlight">
+                <span class="privacy-highlight__icon" aria-hidden="true">
+                    <i class="bi {{ item.icon }}"></i>
+                </span>
+                <h3 class="privacy-highlight__title">{{ item.title }}</h3>
+                <p class="privacy-highlight__text">{{ item.text }}</p>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="privacy-body">
+    <div class="container privacy-body__grid">
+        <aside class="privacy-toc" aria-label="Содержание">
+            <h2 class="privacy-toc__title">
+                <i class="bi bi-list-ul"></i>
+                Содержание
+            </h2>
+            <ol class="privacy-toc__list">
+                {% for section in sections %}
+                <li>
+                    <a href="#{{ section.id }}" class="privacy-toc__link">
+                        {{ section.title }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ol>
+        </aside>
+
+        <article class="privacy-content">
+            {% for section in sections %}
+            <section class="privacy-section" id="{{ section.id }}">
+                <h2 class="privacy-section__title">{{ section.title }}</h2>
+
+                {% for paragraph in section.paragraphs %}
+                    <p class="privacy-section__text">{{ paragraph }}</p>
+                {% endfor %}
+
+                {% if section.list %}
+                    <dl class="privacy-terms">
+                        {% for entry in section.list %}
+                        <div class="privacy-term">
+                            <dt>{{ entry.term }}</dt>
+                            <dd>— {{ entry.definition }}</dd>
+                        </div>
+                        {% endfor %}
+                    </dl>
+                {% endif %}
+
+                {% if section.list_items %}
+                    <ul class="privacy-section__list">
+                        {% for item in section.list_items %}
+                        <li>
+                            <i class="bi bi-check2" aria-hidden="true"></i>
+                            <span>{{ item }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                {% for paragraph in section.paragraphs_after %}
+                    <p class="privacy-section__text">{{ paragraph }}</p>
+                {% endfor %}
+
+                {% if section.contacts %}
+                    <div class="privacy-contacts">
+                        <div class="privacy-contact">
+                            <span class="privacy-contact__icon" aria-hidden="true">
+                                <i class="bi bi-building"></i>
+                            </span>
+                            <div class="privacy-contact__body">
+                                <span class="privacy-contact__label">Наименование</span>
+                                <span class="privacy-contact__value">
+                                    {{ operator.full_name }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="privacy-contact">
+                            <span class="privacy-contact__icon" aria-hidden="true">
+                                <i class="bi bi-geo-alt"></i>
+                            </span>
+                            <div class="privacy-contact__body">
+                                <span class="privacy-contact__label">Адрес</span>
+                                <span class="privacy-contact__value">
+                                    {{ operator.address }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="privacy-contact">
+                            <span class="privacy-contact__icon" aria-hidden="true">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+                            <div class="privacy-contact__body">
+                                <span class="privacy-contact__label">Электронная почта</span>
+                                <a href="mailto:{{ operator.email }}"
+                                   class="privacy-contact__value">
+                                    {{ operator.email }}
+                                </a>
+                            </div>
+                        </div>
+                        <div class="privacy-contact">
+                            <span class="privacy-contact__icon" aria-hidden="true">
+                                <i class="bi bi-telephone"></i>
+                            </span>
+                            <div class="privacy-contact__body">
+                                <span class="privacy-contact__label">Телефон</span>
+                                <a href="tel:+74955000363"
+                                   class="privacy-contact__value">
+                                    {{ operator.phone }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </section>
+            {% endfor %}
+
+            <div class="privacy-footer">
+                <p class="privacy-footer__text">
+                    Документ составлен в соответствии с требованиями
+                    Федерального закона № 152-ФЗ «О персональных данных».
+                    Если у вас остались вопросы по обработке персональных
+                    данных — напишите нам через форму обратной связи.
+                </p>
+                <div class="privacy-footer__actions">
+                    <a href="{% url 'catalog:feedback' %}"
+                       class="btn btn--primary btn--lg">
+                        <i class="bi bi-chat-dots"></i>
+                        Задать вопрос
+                    </a>
+                    <a href="{% url 'catalog:contacts' %}"
+                       class="btn btn--outline btn--lg">
+                        <i class="bi bi-geo-alt"></i>
+                        Контакты центра
+                    </a>
+                </div>
+            </div>
+        </article>
+    </div>
+</section>
+{% endblock %}

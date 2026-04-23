@@ -50,6 +50,10 @@
                                 <i class="bi bi-person-workspace" aria-hidden="true"></i>
                                 <span>Для организаторов</span>
                             </a>
+                            <a class="site-nav__submenu-item" href="{% url 'catalog:privacy' %}" role="menuitem">
+                                <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                                <span>Политика конфиденциальности</span>
+                            </a>
                         </div>
                     </li>
 
@@ -209,7 +213,7 @@
             <div class="container site-footer__bottom-inner">
                 <span>© {% now "Y" %} ЧОУВО «МУИВ им. С.Ю. Витте». Все права защищены.</span>
                 <div class="site-footer__legal">
-                    <a href="#">Политика конфиденциальности</a>
+                    <a href="{% url 'catalog:privacy' %}">Политика конфиденциальности</a>
                     <a href="#">Пользовательское соглашение</a>
                 </div>
             </div>
