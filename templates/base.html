@@ -30,14 +30,47 @@
 
             <nav class="site-nav" id="siteNav" aria-label="Основная навигация">
                 <ul class="site-nav__list">
-                    <li><a class="site-nav__link" href="{% url 'catalog:landing' %}">Главная</a></li>
                     <li><a class="site-nav__link" href="{% url 'catalog:events' %}">Каталог</a></li>
-                    <li><a class="site-nav__link" href="{% url 'catalog:about' %}">О нас</a></li>
-                    <li><a class="site-nav__link" href="{% url 'catalog:benefits' %}">Преимущества</a></li>
-                    <li><a class="site-nav__link" href="{% url 'catalog:organizers' %}">Для организаторов</a></li>
+
+                    <li class="site-nav__group" data-nav-group>
+                        <button type="button" class="site-nav__trigger" aria-haspopup="true" aria-expanded="false">
+                            <span>О сервисе</span>
+                            <i class="bi bi-chevron-down site-nav__chevron" aria-hidden="true"></i>
+                        </button>
+                        <div class="site-nav__submenu" role="menu">
+                            <a class="site-nav__submenu-item" href="{% url 'catalog:about' %}" role="menuitem">
+                                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                <span>О нас</span>
+                            </a>
+                            <a class="site-nav__submenu-item" href="{% url 'catalog:benefits' %}" role="menuitem">
+                                <i class="bi bi-stars" aria-hidden="true"></i>
+                                <span>Преимущества</span>
+                            </a>
+                            <a class="site-nav__submenu-item" href="{% url 'catalog:organizers' %}" role="menuitem">
+                                <i class="bi bi-person-workspace" aria-hidden="true"></i>
+                                <span>Для организаторов</span>
+                            </a>
+                        </div>
+                    </li>
+
                     <li><a class="site-nav__link" href="{% url 'catalog:faq' %}">Вопросы</a></li>
-                    <li><a class="site-nav__link" href="{% url 'catalog:contacts' %}">Контакты</a></li>
-                    <li><a class="site-nav__link" href="{% url 'catalog:feedback' %}">Обратная связь</a></li>
+
+                    <li class="site-nav__group" data-nav-group>
+                        <button type="button" class="site-nav__trigger" aria-haspopup="true" aria-expanded="false">
+                            <span>Связаться</span>
+                            <i class="bi bi-chevron-down site-nav__chevron" aria-hidden="true"></i>
+                        </button>
+                        <div class="site-nav__submenu" role="menu">
+                            <a class="site-nav__submenu-item" href="{% url 'catalog:contacts' %}" role="menuitem">
+                                <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                                <span>Контакты</span>
+                            </a>
+                            <a class="site-nav__submenu-item" href="{% url 'catalog:feedback' %}" role="menuitem">
+                                <i class="bi bi-chat-dots" aria-hidden="true"></i>
+                                <span>Обратная связь</span>
+                            </a>
+                        </div>
+                    </li>
                 </ul>
             </nav>
 

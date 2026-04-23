@@ -24,12 +24,53 @@
 
     function closeNavOnLink(event) {
         if (!nav || !burger) return;
-        if (event.target.matches('.site-nav__link') && nav.classList.contains('is-open')) {
+        const linkTarget = event.target.closest(
+            '.site-nav__link, .site-nav__submenu-item'
+        );
+        if (linkTarget && nav.classList.contains('is-open')) {
             nav.classList.remove('is-open');
             burger.classList.remove('is-open');
             burger.setAttribute('aria-expanded', 'false');
             document.body.style.overflow = '';
         }
+    }
+
+    function initNavDropdowns() {
+        const groups = document.querySelectorAll('[data-nav-group]');
+        if (!groups.length) return;
+
+        function closeAll(except) {
+            groups.forEach((group) => {
+                if (group === except) return;
+                if (!group.classList.contains('is-open')) return;
+                group.classList.remove('is-open');
+                const trigger = group.querySelector('.site-nav__trigger');
+                if (trigger) {
+                    trigger.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
+        groups.forEach((group) => {
+            const trigger = group.querySelector('.site-nav__trigger');
+            if (!trigger) return;
+
+            trigger.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const isOpen = group.classList.toggle('is-open');
+                trigger.setAttribute('aria-expanded', String(isOpen));
+                if (isOpen) closeAll(group);
+            });
+        });
+
+        document.addEventListener('click', (event) => {
+            const inside = event.target.closest('[data-nav-group]');
+            if (!inside) closeAll(null);
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeAll(null);
+        });
     }
 
     function initReveal() {
@@ -123,6 +164,7 @@
         initSmoothScroll();
         initReveal();
         initUserMenu();
+        initNavDropdowns();
         if (burger) {
             burger.addEventListener('click', toggleNav);
         }
