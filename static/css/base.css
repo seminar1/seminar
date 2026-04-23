@@ -668,7 +668,7 @@ ul {
 
 .site-footer__grid {
     display: grid;
-    grid-template-columns: 2fr 1fr 1.2fr 1fr;
+    grid-template-columns: 2fr 1fr 1.2fr;
     gap: 48px;
     padding: 72px 24px 48px;
 }
@@ -733,29 +733,6 @@ ul {
 .site-footer__list--contacts i {
     color: var(--color-accent);
     margin-top: 3px;
-}
-
-.site-footer__socials {
-    display: flex;
-    gap: 10px;
-}
-
-.site-footer__socials a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.06);
-    color: #dbe1f5;
-    font-size: 18px;
-}
-
-.site-footer__socials a:hover {
-    background: var(--color-primary);
-    color: #fff;
-    transform: translateY(-2px);
 }
 
 .site-footer__bottom {
