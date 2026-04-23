@@ -50,14 +50,6 @@
                                 <i class="bi bi-person-workspace" aria-hidden="true"></i>
                                 <span>Для организаторов</span>
                             </a>
-                            <a class="site-nav__submenu-item" href="{% url 'catalog:privacy' %}" role="menuitem">
-                                <i class="bi bi-shield-lock" aria-hidden="true"></i>
-                                <span>Политика конфиденциальности</span>
-                            </a>
-                            <a class="site-nav__submenu-item" href="{% url 'catalog:terms' %}" role="menuitem">
-                                <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
-                                <span>Пользовательское соглашение</span>
-                            </a>
                         </div>
                     </li>
 
@@ -65,7 +57,7 @@
 
                     <li class="site-nav__group" data-nav-group>
                         <button type="button" class="site-nav__trigger" aria-haspopup="true" aria-expanded="false">
-                            <span>Связаться</span>
+                            <span>Контакты</span>
                             <i class="bi bi-chevron-down site-nav__chevron" aria-hidden="true"></i>
                         </button>
                         <div class="site-nav__submenu" role="menu">
@@ -76,6 +68,23 @@
                             <a class="site-nav__submenu-item" href="{% url 'catalog:feedback' %}" role="menuitem">
                                 <i class="bi bi-chat-dots" aria-hidden="true"></i>
                                 <span>Обратная связь</span>
+                            </a>
+                        </div>
+                    </li>
+
+                    <li class="site-nav__group" data-nav-group>
+                        <button type="button" class="site-nav__trigger" aria-haspopup="true" aria-expanded="false">
+                            <span>Документы</span>
+                            <i class="bi bi-chevron-down site-nav__chevron" aria-hidden="true"></i>
+                        </button>
+                        <div class="site-nav__submenu" role="menu">
+                            <a class="site-nav__submenu-item" href="{% url 'catalog:privacy' %}" role="menuitem">
+                                <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                                <span>Политика конфиденциальности</span>
+                            </a>
+                            <a class="site-nav__submenu-item" href="{% url 'catalog:terms' %}" role="menuitem">
+                                <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                                <span>Пользовательское соглашение</span>
                             </a>
                         </div>
                     </li>
