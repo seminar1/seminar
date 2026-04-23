@@ -327,6 +327,17 @@ select.feedback-form__input {
     color: #a02334;
 }
 
+.feedback-form__alert--info {
+    background: var(--color-primary-soft);
+    border: 1px solid rgba(41, 72, 255, 0.22);
+    color: var(--color-primary-dark);
+    margin-bottom: 18px;
+}
+
+.feedback-form__alert--info strong {
+    color: var(--color-primary-dark);
+}
+
 
 .feedback-section__side {
     display: flex;

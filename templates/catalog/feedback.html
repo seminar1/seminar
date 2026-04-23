@@ -59,6 +59,20 @@
                     </p>
                 </header>
 
+                {% if preselected_topic %}
+                    <div class="feedback-form__alert feedback-form__alert--info">
+                        <i class="bi bi-info-circle"></i>
+                        <div>
+                            <p>
+                                Тема обращения заранее выбрана:
+                                <strong>«{{ preselected_topic.title }}»</strong>.
+                                При необходимости вы можете изменить её
+                                в выпадающем списке ниже.
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+
                 <form method="post" class="feedback-form" novalidate>
                     {% csrf_token %}
 

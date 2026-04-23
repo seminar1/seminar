@@ -24,6 +24,7 @@ from catalog.views import (
     FeedbackView,
     LandingView,
     MyRegistrationsView,
+    OrganizersView,
 )
 
 register_converter(UnicodeSlugConverter, 'uslug')
@@ -55,6 +56,7 @@ urlpatterns = [
     ),
     path('about/', AboutView.as_view(), name='about'),
     path('benefits/', BenefitsView.as_view(), name='benefits'),
+    path('organizers/', OrganizersView.as_view(), name='organizers'),
     path('faq/', FaqView.as_view(), name='faq'),
     path('contacts/', ContactsView.as_view(), name='contacts'),
     path('feedback/', FeedbackView.as_view(), name='feedback'),

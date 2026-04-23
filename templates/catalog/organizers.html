@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Для организаторов — Научный Центр МУИВ им. С.Ю. Витте{% endblock %}
+
+{% block meta_description %}Научный центр МУИВ им. С.Ю. Витте приглашает внешних организаторов к сотрудничеству: размещение собственных мероприятий, информационное партнёрство и совместные научные проекты.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/faq.css' %}">
+    <link rel="stylesheet" href="{% static 'css/organizers.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="organizers-hero">
+    <div class="organizers-hero__backdrop" aria-hidden="true">
+        <span class="organizers-hero__blob organizers-hero__blob--1"></span>
+        <span class="organizers-hero__blob organizers-hero__blob--2"></span>
+    </div>
+    <div class="container organizers-hero__inner">
+        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+            <a href="{% url 'catalog:landing' %}">Главная</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Для организаторов</span>
+        </nav>
+        <span class="organizers-hero__eyebrow">
+            <i class="bi bi-handshake"></i>
+            Приглашаем к сотрудничеству
+        </span>
+        <h1 class="organizers-hero__title">
+            Проведите своё научное <span class="organizers-hero__title-accent">мероприятие</span>
+            вместе с МУИВ им. С.Ю. Витте
+        </h1>
+        <p class="organizers-hero__lead">
+            Научный центр открыт для партнёрства с университетами, научными
+            институтами, компаниями и независимыми экспертами. Мы поможем
+            разместить ваше мероприятие в электронном каталоге, обеспечим
+            онлайн-регистрацию участников и информационную поддержку.
+        </p>
+
+        <div class="organizers-hero__actions">
+            <a href="{% url 'catalog:feedback' %}?topic={{ feedback_topic_propose|urlencode }}"
+               class="btn btn--primary btn--lg">
+                <i class="bi bi-calendar-plus"></i>
+                Предложить мероприятие
+            </a>
+            <a href="{% url 'catalog:feedback' %}?topic={{ feedback_topic_partnership|urlencode }}"
+               class="btn btn--outline btn--lg">
+                <i class="bi bi-handshake"></i>
+                Обсудить сотрудничество
+            </a>
+        </div>
+
+        <div class="organizers-hero__facts">
+            {% for fact in hero_facts %}
+            <div class="organizers-fact">
+                <span class="organizers-fact__icon" aria-hidden="true">
+                    <i class="bi {{ fact.icon }}"></i>
+                </span>
+                <div class="organizers-fact__body">
+                    <span class="organizers-fact__value">{{ fact.value }}</span>
+                    <span class="organizers-fact__label">{{ fact.label }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="organizers-opportunities">
+    <div class="container">
+        <header class="section__header">
+            <span class="section__eyebrow">Форматы сотрудничества</span>
+            <h2 class="section__title">Как мы можем работать вместе</h2>
+            <p class="section__lead">
+                Выберите подходящий формат — от полноценного совместного
+                мероприятия до информационного партнёрства и участия в
+                качестве приглашённого спикера.
+            </p>
+        </header>
+
+        <div class="opportunities__grid">
+            {% for item in opportunities %}
+            <article class="opportunity-card">
+                <span class="opportunity-card__icon" aria-hidden="true">
+                    <i class="bi {{ item.icon }}"></i>
+                </span>
+                <h3 class="opportunity-card__title">{{ item.title }}</h3>
+                <p class="opportunity-card__text">{{ item.text }}</p>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="organizers-partners">
+    <div class="container">
+        <header class="section__header">
+            <span class="section__eyebrow">Кого мы ждём</span>
+            <h2 class="section__title">С кем мы готовы сотрудничать</h2>
+            <p class="section__lead">
+                Научный центр открыт для внешних организаторов — от академических
+                институтов до индустриальных партнёров и независимых экспертов.
+            </p>
+        </header>
+
+        <div class="partners__grid">
+            {% for partner in partners %}
+            <article class="partner-card">
+                <span class="partner-card__icon" aria-hidden="true">
+                    <i class="bi {{ partner.icon }}"></i>
+                </span>
+                <div class="partner-card__body">
+                    <h3 class="partner-card__title">{{ partner.title }}</h3>
+                    <p class="partner-card__text">{{ partner.text }}</p>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="organizers-benefits">
+    <div class="container organizers-benefits__grid">
+        <div class="organizers-benefits__content">
+            <span class="section__eyebrow">Что вы получаете</span>
+            <h2 class="section__title">Полный цикл поддержки мероприятия</h2>
+            <p class="organizers-benefits__lead">
+                Мы берём на себя организационные вопросы, чтобы вы могли
+                сосредоточиться на содержательной части события.
+            </p>
+
+            <ul class="organizers-benefits__list">
+                {% for point in benefits_points %}
+                <li>
+                    <i class="bi bi-check2-circle"></i>
+                    <span>{{ point }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <aside class="organizers-formats">
+            <h3 class="organizers-formats__title">
+                <i class="bi bi-stack"></i>
+                Поддерживаемые форматы
+            </h3>
+            <div class="organizers-formats__grid">
+                {% for fmt in formats %}
+                <div class="organizers-format">
+                    <span class="organizers-format__icon" aria-hidden="true">
+                        <i class="bi {{ fmt.icon }}"></i>
+                    </span>
+                    <span class="organizers-format__title">{{ fmt.title }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </aside>
+    </div>
+</section>
+
+<section class="organizers-process">
+    <div class="container">
+        <header class="section__header">
+            <span class="section__eyebrow">Как это работает</span>
+            <h2 class="section__title">Четыре шага от идеи до события</h2>
+            <p class="section__lead">
+                Подготовка мероприятия вместе с научным центром занимает
+                в среднем от одной до четырёх недель.
+            </p>
+        </header>
+
+        <ol class="process__list">
+            {% for step in process_steps %}
+            <li class="process-step">
+                <span class="process-step__number">{{ step.number }}</span>
+                <h3 class="process-step__title">{{ step.title }}</h3>
+                <p class="process-step__text">{{ step.text }}</p>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
+<section class="organizers-faq">
+    <div class="container organizers-faq__inner">
+        <header class="section__header">
+            <span class="section__eyebrow">Частые вопросы</span>
+            <h2 class="section__title">Что важно знать до обращения</h2>
+        </header>
+
+        <div class="faq-list organizers-faq__list">
+            {% for item in faq %}
+            <details class="faq-item">
+                <summary class="faq-item__question">
+                    <span>{{ item.question }}</span>
+                    <span class="faq-item__icon" aria-hidden="true">
+                        <i class="bi bi-plus-lg"></i>
+                    </span>
+                </summary>
+                <div class="faq-item__answer">
+                    <p>{{ item.answer }}</p>
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="organizers-cta">
+    <div class="container organizers-cta__inner">
+        <div class="organizers-cta__content">
+            <h2 class="organizers-cta__title">Готовы обсудить ваше мероприятие?</h2>
+            <p class="organizers-cta__text">
+                Напишите нам через форму обратной связи — расскажите об идее,
+                аудитории и желаемом формате. Ответим в течение 1–2 рабочих
+                дней и предложим удобный план совместной работы.
+            </p>
+
+            <div class="organizers-cta__hint">
+                <i class="bi bi-info-circle"></i>
+                <div>
+                    <span class="organizers-cta__hint-title">
+                        Подсказка по теме обращения
+                    </span>
+                    <span class="organizers-cta__hint-text">
+                        В форме обратной связи выберите одну из тем:
+                        <strong>«Сотрудничество и партнёрство»</strong> —
+                        для обсуждения совместных проектов, или
+                        <strong>«Предложить своё мероприятие»</strong> —
+                        если хотите разместить собственное научное событие
+                        в каталоге.
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="organizers-cta__actions">
+            <a href="{% url 'catalog:feedback' %}?topic={{ feedback_topic_propose|urlencode }}"
+               class="btn btn--primary btn--lg">
+                <i class="bi bi-calendar-plus"></i>
+                Предложить мероприятие
+            </a>
+            <a href="{% url 'catalog:feedback' %}?topic={{ feedback_topic_partnership|urlencode }}"
+               class="btn btn--outline btn--lg btn--outline-light">
+                <i class="bi bi-handshake"></i>
+                Обсудить сотрудничество
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
