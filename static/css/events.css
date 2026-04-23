@@ -292,6 +292,70 @@
     gap: 16px;
 }
 
+/* Кнопка «Избранное» в шапке карточки каталога */
+.event-item__bookmark {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+}
+
+.event-bookmark__form {
+    margin: 0;
+}
+
+.event-bookmark__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 50%;
+    background: #fff;
+    color: #c23a4d;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.event-bookmark__btn:hover {
+    box-shadow: var(--shadow-md);
+    color: #a02a3a;
+    transform: scale(1.06);
+}
+
+.event-bookmark__btn.is-active {
+    color: #fff;
+    background: linear-gradient(135deg, #e84d62, #c23a4d);
+}
+
+.event-bookmark__btn.is-active:hover {
+    color: #fff;
+    filter: brightness(1.05);
+}
+
+.event-bookmark__btn--guest {
+    text-decoration: none;
+}
+
+.event-bookmark--wide .event-bookmark__btn {
+    width: 100%;
+    min-height: 44px;
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.event-bookmark--wide .event-bookmark__label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
 .event-item__date {
     display: flex;
     flex-direction: column;

@@ -619,3 +619,31 @@ textarea.reg-form__input {
         justify-content: space-between;
     }
 }
+
+/* Страница «Избранное» (личный кабинет) */
+.my-favorites__body-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 2px;
+}
+
+.my-favorites__bookmark {
+    flex-shrink: 0;
+}
+
+.my-favorites__saved {
+    margin: 8px 0 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.my-favorites__saved i {
+    color: var(--color-primary);
+    font-size: 14px;
+}

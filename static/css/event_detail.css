@@ -305,6 +305,15 @@
     gap: 10px;
 }
 
+.event-card-side__bookmark {
+    margin-bottom: 2px;
+}
+
+.event-card-side__bookmark .event-bookmark__form,
+.event-card-side__bookmark .event-bookmark {
+    width: 100%;
+}
+
 .event-card-side__actions .btn {
     width: 100%;
 }

@@ -651,6 +651,37 @@ class EventRegistration(models.Model):
             ])
 
 
+class EventBookmark(models.Model):
+    """Закладка «Избранное»: мероприятие, сохранённое пользователем."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Пользователь',
+        on_delete=models.CASCADE,
+        related_name='event_bookmarks',
+    )
+    event = models.ForeignKey(
+        Event,
+        verbose_name='Мероприятие',
+        on_delete=models.CASCADE,
+        related_name='bookmarks',
+    )
+    created_at = models.DateTimeField('Добавлено', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Закладка (избранное)'
+        verbose_name_plural = 'Закладки (избранное)'
+        unique_together = ('user', 'event')
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+        ]
+
+    def __str__(self):
+        """Краткое представление для админки и отладки."""
+        return f'{self.user} → {self.event.title}'
+
+
 class FeedbackTopic(models.Model):
     """Тема (категория) обращения в форме обратной связи.
 

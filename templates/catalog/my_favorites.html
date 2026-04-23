@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Избранное — Личный кабинет{% endblock %}
+
+{% block meta_description %}Сохранённые мероприятия электронного каталога: быстрый доступ к событиям, которые вы отметили.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/registration.css' %}">
+    <link rel="stylesheet" href="{% static 'css/events.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="admin-page my-reg my-favorites">
+    <div class="container">
+        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+            <a href="{% url 'catalog:landing' %}">Главная</a>
+            <i class="bi bi-chevron-right"></i>
+            <a href="{% url 'catalog:dashboard' %}">Личный кабинет</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Избранное</span>
+        </nav>
+
+        <header class="my-reg__header">
+            <div>
+                <span class="section__eyebrow">Личный кабинет</span>
+                <h1 class="my-reg__title">Избранное</h1>
+                <p class="my-reg__lead">
+                    Мероприятия, которые вы отметили. Повторное нажатие на
+                    сердечко убирает событие из списка.
+                </p>
+            </div>
+            <a href="{% url 'catalog:events' %}" class="btn btn--primary btn--icon">
+                <i class="bi bi-calendar2-event"></i>
+                К каталогу
+            </a>
+        </header>
+
+        {% include 'catalog/cabinet/_tabs.html' with active_tab='favorites' %}
+
+        {% if bookmarks %}
+            <div class="my-reg__stats" style="margin-top:0;">
+                <div class="my-reg__stat my-reg__stat--confirmed">
+                    <span class="my-reg__stat-value">{% if is_paginated %}{{ page_obj.paginator.count }}{% else %}{{ bookmarks|length }}{% endif %}</span>
+                    <span class="my-reg__stat-label">Сохранено</span>
+                </div>
+            </div>
+
+            <div class="my-reg__list">
+                {% for b in bookmarks %}
+                <article class="reg-item reg-item--favorites my-favorites__item">
+                    <div class="reg-item__date">
+                        <span class="reg-item__day">{{ b.event.date_day }}</span>
+                        <span class="reg-item__month">{{ b.event.date_month_short }}</span>
+                    </div>
+                    <div class="reg-item__body">
+                        <div class="my-favorites__body-top">
+                            <div class="reg-item__tags">
+                                <span class="reg-item__type">{{ b.event.event_type.title }}</span>
+                            </div>
+                            <div class="my-favorites__bookmark">
+                                {% include 'catalog/_event_bookmark_button.html' with event=b.event variant='icon' %}
+                            </div>
+                        </div>
+                        <h3 class="reg-item__title">
+                            <a href="{% url 'catalog:event_detail' b.event.slug %}">{{ b.event.title }}</a>
+                        </h3>
+                        <ul class="reg-item__meta">
+                            <li><i class="bi bi-calendar3"></i> {{ b.event.date_full }}</li>
+                            <li><i class="bi bi-clock"></i> {{ b.event.time_range }}</li>
+                            {% if b.event.location %}
+                            <li><i class="bi bi-geo-alt"></i> {{ b.event.location }}</li>
+                            {% endif %}
+                            <li><i class="bi bi-bookmark"></i> {{ b.event.direction.title }}</li>
+                        </ul>
+                        <p class="my-favorites__saved">
+                            <i class="bi bi-calendar-plus"></i>
+                            В избранном с {{ b.created_at|date:"d.m.Y" }}
+                        </p>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+
+            {% if is_paginated %}
+            <nav class="my-reg__pagination" aria-label="Страницы избранного">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="my-reg__page-link">
+                        <i class="bi bi-chevron-left"></i> Назад
+                    </a>
+                {% endif %}
+                <span class="my-reg__page-current">
+                    {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="my-reg__page-link">
+                        Далее <i class="bi bi-chevron-right"></i>
+                    </a>
+                {% endif %}
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="my-reg__empty">
+                <i class="bi bi-heart"></i>
+                <h3>Избранное пусто</h3>
+                <p>
+                    Добавьте мероприятия в избранное в каталоге или на странице
+                    события.
+                </p>
+                <a href="{% url 'catalog:events' %}" class="btn btn--primary">
+                    <i class="bi bi-calendar2-event"></i>
+                    Перейти в каталог
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

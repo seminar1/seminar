@@ -1,0 +1,42 @@
+{% comment %}
+    Кнопка «В избранное» для карточки мероприятия или страницы деталей.
+    Ожидает: ``event``, ``request``, ``bookmarked_event_ids`` (set id в избранном).
+    Опционально: ``variant`` — ``icon`` (только иконка) или ``wide`` (иконка + текст).
+{% endcomment %}
+{% with variant=variant|default:'icon' %}
+<div class="event-bookmark{% if variant == 'wide' %} event-bookmark--wide{% endif %}">
+    {% if user.is_authenticated %}
+        <form method="post"
+              action="{% url 'catalog:event_bookmark' event.slug %}"
+              class="event-bookmark__form">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button type="submit"
+                    class="event-bookmark__btn{% if event.pk in bookmarked_event_ids %} is-active{% endif %}"
+                    title="{% if event.pk in bookmarked_event_ids %}Убрать из избранного{% else %}В избранное{% endif %}"
+                    aria-pressed="{% if event.pk in bookmarked_event_ids %}true{% else %}false{% endif %}"
+                    aria-label="{% if event.pk in bookmarked_event_ids %}Убрать из избранного{% else %}Добавить в избранное{% endif %}">
+                <i class="bi {% if event.pk in bookmarked_event_ids %}bi-heart-fill{% else %}bi-heart{% endif %}" aria-hidden="true"></i>
+                {% if variant == 'wide' %}
+                    <span class="event-bookmark__label">
+                        {% if event.pk in bookmarked_event_ids %}
+                            В избранном
+                        {% else %}
+                            В избранное
+                        {% endif %}
+                    </span>
+                {% endif %}
+            </button>
+        </form>
+    {% else %}
+        <a href="{% url 'users:login' %}?next={{ request.get_full_path|urlencode }}"
+           class="event-bookmark__btn event-bookmark__btn--guest"
+           title="Войдите, чтобы добавить в избранное">
+            <i class="bi bi-heart" aria-hidden="true"></i>
+            {% if variant == 'wide' %}
+                <span class="event-bookmark__label">В избранное</span>
+            {% endif %}
+        </a>
+    {% endif %}
+</div>
+{% endwith %}

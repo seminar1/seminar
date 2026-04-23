@@ -9,7 +9,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
-from django.utils.http import urlencode
+from django.utils.http import urlencode, url_has_allowed_host_and_scheme
 from django.views.generic import (
     CreateView,
     DetailView,
@@ -33,12 +33,27 @@ from catalog.forms import (
 from catalog.models import (
     Direction,
     Event,
+    EventBookmark,
     EventRegistration,
     EventType,
     FeedbackMessage,
     FeedbackTopic,
 )
 from users.mixins import AdminRequiredMixin, CuratorRequiredMixin
+
+
+def _safe_post_redirect_url(request, default: str) -> str:
+    """Проверяет ``next`` из POST, чтобы не допустить open redirect."""
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if not next_url:
+        return default
+    if url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return next_url
+    return default
 
 
 class EventsView(TemplateView):
@@ -82,12 +97,25 @@ class EventsView(TemplateView):
             {'value': 'name', 'label': 'По названию (А–Я)'},
         ]
 
-        context['events'] = (
+        events = (
             Event.objects
             .filter(status=Event.Status.PUBLISHED)
             .select_related('direction', 'event_type')
             .order_by('starts_at')
         )
+        context['events'] = events
+
+        user = self.request.user
+        if user.is_authenticated:
+            event_ids = list(events.values_list('pk', flat=True))
+            context['bookmarked_event_ids'] = set(
+                EventBookmark.objects.filter(
+                    user=user,
+                    event_id__in=event_ids,
+                ).values_list('event_id', flat=True)
+            )
+        else:
+            context['bookmarked_event_ids'] = set()
         return context
 
 
@@ -146,6 +174,12 @@ class EventDetailView(DetailView):
             user_registration and user_registration.is_active
         )
         context['can_register'] = event.can_user_register(user)
+        if user.is_authenticated and EventBookmark.objects.filter(
+            user=user, event=event
+        ).exists():
+            context['bookmarked_event_ids'] = {event.pk}
+        else:
+            context['bookmarked_event_ids'] = set()
         return context
 
 
@@ -534,6 +568,49 @@ class MyHistoryView(LoginRequiredMixin, ListView):
         context['event_types_breakdown'] = list(event_types[:10])
         context['current_year'] = now.year
         return context
+
+
+class MyFavoritesView(LoginRequiredMixin, ListView):
+    """Страница «Избранное» — сохранённые мероприятия пользователя."""
+
+    model = EventBookmark
+    template_name = 'catalog/my_favorites.html'
+    context_object_name = 'bookmarks'
+    paginate_by = 24
+
+    def get_queryset(self):
+        """Возвращает закладки с предзагрузкой карточек мероприятий."""
+        return (
+            EventBookmark.objects
+            .filter(user=self.request.user)
+            .select_related('event', 'event__direction', 'event__event_type')
+        )
+
+    def get_context_data(self, **kwargs):
+        """Передаёт id событий на странице — для кнопки «сердце» в списке."""
+        context = super().get_context_data(**kwargs)
+        bookmark_list = context.get('bookmarks', context.get('object_list', []))
+        context['bookmarked_event_ids'] = {b.event_id for b in bookmark_list}
+        return context
+
+
+class EventBookmarkToggleView(LoginRequiredMixin, View):
+    """Добавляет или убирает мероприятие из избранного (переключатель)."""
+
+    http_method_names = ['post']
+
+    def post(self, request, *args, **kwargs):
+        """Создаёт закладку, если её не было, иначе удаляет."""
+        slug = kwargs['slug']
+        event = get_object_or_404(Event, slug=slug)
+        bookmark, created = EventBookmark.objects.get_or_create(
+            user=request.user,
+            event=event,
+        )
+        if not created:
+            bookmark.delete()
+        default_url = reverse('catalog:event_detail', kwargs={'slug': event.slug})
+        return redirect(_safe_post_redirect_url(request, default_url))
 
 
 class FaqView(TemplateView):

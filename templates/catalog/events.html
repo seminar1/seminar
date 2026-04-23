@@ -114,6 +114,9 @@
                 data-format="{{ event.event_format }}"
                 data-haystack="{{ event.title|lower }} {{ event.short_description|lower }} {{ event.description|lower }} {{ event.location|lower }}">
                 <div class="event-item__media">
+                    <div class="event-item__bookmark">
+                        {% include 'catalog/_event_bookmark_button.html' with event=event %}
+                    </div>
                     <div class="event-item__date">
                         <span class="event-item__day">{{ event.date_day }}</span>
                         <span class="event-item__month">{{ event.date_month_short }}</span>

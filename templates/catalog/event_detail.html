@@ -111,6 +111,9 @@
                 </div>
 
                 <div class="event-card-side__actions">
+                    <div class="event-card-side__bookmark">
+                        {% include 'catalog/_event_bookmark_button.html' with event=event variant='wide' %}
+                    </div>
                     {% if has_active_registration %}
                         <div class="event-card-side__status event-card-side__status--{{ user_registration.status }}">
                             <i class="bi bi-check2-circle"></i>

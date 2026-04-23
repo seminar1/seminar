@@ -1,7 +1,7 @@
 {% comment %}
     Навигация по разделам личного кабинета пользователя.
     Ожидает переменную ``active_tab`` со значением:
-    'dashboard', 'registrations', 'history' или 'settings'.
+    'dashboard', 'registrations', 'history', 'favorites' или 'settings'.
 {% endcomment %}
 <nav class="admin-tabs" aria-label="Разделы личного кабинета">
     <a href="{% url 'catalog:dashboard' %}"
@@ -18,6 +18,11 @@
        class="admin-tabs__link {% if active_tab == 'history' %}is-active{% endif %}">
         <i class="bi bi-clock-history"></i>
         История участий
+    </a>
+    <a href="{% url 'catalog:my_favorites' %}"
+       class="admin-tabs__link {% if active_tab == 'favorites' %}is-active{% endif %}">
+        <i class="bi bi-heart"></i>
+        Избранное
     </a>
     <a href="{% url 'users:settings' %}"
        class="admin-tabs__link {% if active_tab == 'settings' %}is-active{% endif %}">
