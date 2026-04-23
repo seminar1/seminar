@@ -349,6 +349,81 @@ class EventRegistrationCancelView(LoginRequiredMixin, View):
         return redirect('catalog:my_registrations')
 
 
+class DashboardView(LoginRequiredMixin, TemplateView):
+    """Главная страница личного кабинета («Обзор»).
+
+    Сводный экран авторизованного пользователя: показывает ближайшее
+    подтверждённое/ожидающее событие, счётчики заявок в разрезе
+    статусов, последние поданные заявки и рекомендуемые мероприятия,
+    на которые пользователь ещё не записан.
+    """
+
+    template_name = 'catalog/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        """Собирает сводку по заявкам и мероприятиям пользователя."""
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        now = timezone.now()
+
+        user_regs = EventRegistration.objects.filter(user=user)
+
+        context['stats'] = {
+            'total': user_regs.count(),
+            'confirmed': user_regs.filter(
+                status=EventRegistration.Status.CONFIRMED
+            ).count(),
+            'pending': user_regs.filter(
+                status=EventRegistration.Status.PENDING
+            ).count(),
+            'waitlist': user_regs.filter(
+                status=EventRegistration.Status.WAITLIST
+            ).count(),
+            'completed': user_regs.filter(
+                event__status=Event.Status.COMPLETED,
+                status=EventRegistration.Status.CONFIRMED,
+            ).count(),
+            'cancelled': user_regs.filter(
+                status=EventRegistration.Status.CANCELLED
+            ).count(),
+        }
+
+        upcoming_regs = (
+            user_regs
+            .filter(
+                status__in=EventRegistration.ACTIVE_STATUSES,
+                event__starts_at__gte=now,
+            )
+            .select_related('event', 'event__direction', 'event__event_type')
+            .order_by('event__starts_at')
+        )
+        context['next_registration'] = upcoming_regs.first()
+        context['upcoming_registrations'] = upcoming_regs[:5]
+
+        context['recent_registrations'] = (
+            user_regs
+            .select_related('event', 'event__direction', 'event__event_type')
+            .order_by('-created_at')[:5]
+        )
+
+        registered_event_ids = list(
+            user_regs.values_list('event_id', flat=True)
+        )
+        context['recommended_events'] = (
+            Event.objects
+            .filter(
+                status=Event.Status.PUBLISHED,
+                starts_at__gte=now,
+                is_featured=True,
+            )
+            .exclude(id__in=registered_event_ids)
+            .select_related('direction', 'event_type')
+            .order_by('starts_at')[:3]
+        )
+
+        return context
+
+
 class MyRegistrationsView(LoginRequiredMixin, ListView):
     """Личный список заявок пользователя на научные мероприятия."""
 

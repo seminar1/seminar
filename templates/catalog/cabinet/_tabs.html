@@ -1,0 +1,22 @@
+{% comment %}
+    Навигация по разделам личного кабинета пользователя.
+    Ожидает переменную ``active_tab`` со значением:
+    'dashboard' или 'registrations'.
+{% endcomment %}
+<nav class="admin-tabs" aria-label="Разделы личного кабинета">
+    <a href="{% url 'catalog:dashboard' %}"
+       class="admin-tabs__link {% if active_tab == 'dashboard' %}is-active{% endif %}">
+        <i class="bi bi-speedometer2"></i>
+        Обзор
+    </a>
+    <a href="{% url 'catalog:my_registrations' %}"
+       class="admin-tabs__link {% if active_tab == 'registrations' %}is-active{% endif %}">
+        <i class="bi bi-journal-check"></i>
+        Мои заявки
+    </a>
+    <a href="{% url 'users:settings' %}"
+       class="admin-tabs__link {% if active_tab == 'settings' %}is-active{% endif %}">
+        <i class="bi bi-gear"></i>
+        Настройки
+    </a>
+</nav>

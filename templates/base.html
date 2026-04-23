@@ -111,10 +111,17 @@
                                 </div>
                             </div>
                             <div class="user-menu__divider"></div>
-                            <a class="user-menu__item" href="{% url 'catalog:my_registrations' %}" role="menuitem">
-                                <i class="bi bi-journal-check"></i>
-                                Мои заявки
-                            </a>
+                            {% if user.is_regular_user %}
+                                <a class="user-menu__item" href="{% url 'catalog:dashboard' %}" role="menuitem">
+                                    <i class="bi bi-speedometer2"></i>
+                                    Личный кабинет
+                                </a>
+                            {% else %}
+                                <a class="user-menu__item" href="{% url 'catalog:my_registrations' %}" role="menuitem">
+                                    <i class="bi bi-journal-check"></i>
+                                    Мои заявки
+                                </a>
+                            {% endif %}
                             <a class="user-menu__item" href="{% url 'users:settings' %}" role="menuitem">
                                 <i class="bi bi-gear"></i>
                                 Настройки

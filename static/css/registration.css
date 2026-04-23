@@ -273,6 +273,11 @@ textarea.reg-form__input {
     line-height: 1.55;
 }
 
+.my-reg .admin-tabs {
+    margin-top: 0;
+    margin-bottom: 28px;
+}
+
 .my-reg__stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);

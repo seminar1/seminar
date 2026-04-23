@@ -6,6 +6,7 @@
 {% block meta_description %}Личный список заявок на научные мероприятия — статусы, лист ожидания, история участия.{% endblock %}
 
 {% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
     <link rel="stylesheet" href="{% static 'css/registration.css' %}">
 {% endblock %}
 
@@ -14,6 +15,8 @@
     <div class="container">
         <nav class="breadcrumbs" aria-label="Навигационная цепочка">
             <a href="{% url 'catalog:landing' %}">Главная</a>
+            <i class="bi bi-chevron-right"></i>
+            <a href="{% url 'catalog:dashboard' %}">Личный кабинет</a>
             <i class="bi bi-chevron-right"></i>
             <span>Мои заявки</span>
         </nav>
@@ -32,6 +35,8 @@
                 К каталогу мероприятий
             </a>
         </header>
+
+        {% include 'catalog/cabinet/_tabs.html' with active_tab='registrations' %}
 
         <div class="my-reg__stats">
             <div class="my-reg__stat">

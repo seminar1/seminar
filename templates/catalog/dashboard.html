@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Личный кабинет — Научный Центр МУИВ им. С.Ю. Витте{% endblock %}
+
+{% block meta_description %}Личный кабинет пользователя: сводка заявок, ближайшие мероприятия и персональные рекомендации.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cabinet.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="admin-page">
+    <div class="container">
+        <header class="admin-page__header">
+            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+                <a href="{% url 'catalog:landing' %}">Главная</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>Личный кабинет</span>
+            </nav>
+
+            <div class="cabinet-hero">
+                <span class="admin-page__eyebrow">
+                    <i class="bi bi-person-circle"></i>
+                    Личный кабинет
+                </span>
+                <div class="cabinet-hero__greeting">
+                    <div class="cabinet-hero__avatar" aria-hidden="true">
+                        {{ user.first_name|default:user.username|slice:":1"|upper }}
+                    </div>
+                    <div class="cabinet-hero__greeting-text">
+                        <span class="cabinet-hero__hello">Здравствуйте</span>
+                        <h1 class="cabinet-hero__name">
+                            {{ user.first_name|default:user.username }}{% if user.first_name %},{% endif %} добро пожаловать!
+                        </h1>
+                    </div>
+                </div>
+                <p class="admin-page__lead">
+                    Здесь собрана вся ваша активность в каталоге: ближайшие
+                    мероприятия, поданные заявки и подборка рекомендуемых
+                    событий, на которые можно записаться прямо сейчас.
+                </p>
+            </div>
+
+            {% include 'catalog/cabinet/_tabs.html' with active_tab='dashboard' %}
+        </header>
+
+        <div class="admin-stats">
+            <div class="admin-stat admin-stat--admin">
+                <div class="admin-stat__value">{{ stats.total }}</div>
+                <div class="admin-stat__label">Всего заявок</div>
+            </div>
+            <div class="admin-stat admin-stat--user">
+                <div class="admin-stat__value">{{ stats.confirmed }}</div>
+                <div class="admin-stat__label">Подтверждено</div>
+            </div>
+            <div class="admin-stat">
+                <div class="admin-stat__value">{{ stats.pending }}</div>
+                <div class="admin-stat__label">Ожидают</div>
+            </div>
+            <div class="admin-stat admin-stat--curator">
+                <div class="admin-stat__value">{{ stats.waitlist }}</div>
+                <div class="admin-stat__label">В листе ожидания</div>
+            </div>
+        </div>
+
+        <div class="cabinet-grid">
+            <div class="cabinet-grid__main">
+                {% if next_registration %}
+                    <article class="cabinet-card cabinet-upcoming">
+                        <span class="cabinet-upcoming__eyebrow">
+                            <i class="bi bi-stars"></i>
+                            Ближайшее мероприятие
+                        </span>
+                        <div class="cabinet-upcoming__body">
+                            <div class="cabinet-upcoming__date" aria-hidden="true">
+                                <span class="cabinet-upcoming__day">{{ next_registration.event.date_day }}</span>
+                                <span class="cabinet-upcoming__month">{{ next_registration.event.date_month_short }}</span>
+                            </div>
+                            <div class="cabinet-upcoming__info">
+                                <span class="cabinet-upcoming__type">{{ next_registration.event.event_type.title }}</span>
+                                <h3 class="cabinet-upcoming__title">
+                                    <a href="{% url 'catalog:event_detail' next_registration.event.slug %}">
+                                        {{ next_registration.event.title }}
+                                    </a>
+                                </h3>
+                                <ul class="cabinet-upcoming__meta">
+                                    <li><i class="bi bi-calendar3"></i> {{ next_registration.event.date_full }}</li>
+                                    <li><i class="bi bi-clock"></i> {{ next_registration.event.time_range }}</li>
+                                    {% if next_registration.event.location %}
+                                        <li><i class="bi bi-geo-alt"></i> {{ next_registration.event.location }}</li>
+                                    {% endif %}
+                                </ul>
+                                <span class="cabinet-upcoming__status">
+                                    <i class="bi bi-circle-fill"></i>
+                                    {{ next_registration.get_status_display }}
+                                    {% if next_registration.is_waitlisted and next_registration.waitlist_position %}
+                                        · №{{ next_registration.waitlist_position }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="cabinet-upcoming__actions">
+                            <a href="{% url 'catalog:event_detail' next_registration.event.slug %}"
+                               class="btn btn--primary">
+                                <i class="bi bi-calendar2-event"></i>
+                                Открыть мероприятие
+                            </a>
+                            <a href="{% url 'catalog:my_registrations' %}" class="btn btn--outline">
+                                <i class="bi bi-journal-check"></i>
+                                Все заявки
+                            </a>
+                        </div>
+                    </article>
+                {% else %}
+                    <article class="cabinet-card">
+                        <header class="cabinet-card__header">
+                            <h3 class="cabinet-card__title">
+                                <i class="bi bi-stars"></i>
+                                Ближайшее мероприятие
+                            </h3>
+                        </header>
+                        <div class="cabinet-empty">
+                            <i class="bi bi-calendar2-x"></i>
+                            <p>
+                                Активных заявок на предстоящие мероприятия пока
+                                нет — выберите подходящее событие в каталоге.
+                            </p>
+                            <a href="{% url 'catalog:events' %}" class="btn btn--primary btn--sm">
+                                <i class="bi bi-calendar2-event"></i>
+                                Открыть каталог
+                            </a>
+                        </div>
+                    </article>
+                {% endif %}
+
+                <article class="cabinet-card">
+                    <header class="cabinet-card__header">
+                        <h3 class="cabinet-card__title">
+                            <i class="bi bi-clock-history"></i>
+                            Последние заявки
+                        </h3>
+                        {% if recent_registrations %}
+                            <a href="{% url 'catalog:my_registrations' %}" class="cabinet-card__link">
+                                Все заявки
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+                        {% endif %}
+                    </header>
+                    {% if recent_registrations %}
+                        <ul class="cabinet-list">
+                            {% for reg in recent_registrations %}
+                                <li class="cabinet-list__item">
+                                    <div class="cabinet-list__date" aria-hidden="true">
+                                        <span class="cabinet-list__day">{{ reg.event.date_day }}</span>
+                                        <span class="cabinet-list__month">{{ reg.event.date_month_short }}</span>
+                                    </div>
+                                    <div class="cabinet-list__body">
+                                        <h4 class="cabinet-list__title">
+                                            <a href="{% url 'catalog:event_detail' reg.event.slug %}">
+                                                {{ reg.event.title }}
+                                            </a>
+                                        </h4>
+                                        <div class="cabinet-list__meta">
+                                            <span><i class="bi bi-bookmark"></i>{{ reg.event.direction.title }}</span>
+                                            <span><i class="bi bi-calendar3"></i>{{ reg.event.date_full }}</span>
+                                        </div>
+                                    </div>
+                                    <span class="cabinet-list__status cabinet-list__status--{{ reg.status }}">
+                                        <i class="bi bi-circle-fill"></i>
+                                        {{ reg.get_status_display }}
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="cabinet-empty">
+                            <i class="bi bi-inbox"></i>
+                            <p>
+                                Пока вы не подавали заявок. Как только это
+                                произойдёт — история появится здесь.
+                            </p>
+                        </div>
+                    {% endif %}
+                </article>
+            </div>
+
+            <aside class="cabinet-grid__aside">
+                <article class="cabinet-card">
+                    <header class="cabinet-card__header">
+                        <h3 class="cabinet-card__title">
+                            <i class="bi bi-lightning-charge"></i>
+                            Быстрые действия
+                        </h3>
+                    </header>
+                    <div class="cabinet-upcoming__actions">
+                        <a href="{% url 'catalog:events' %}" class="btn btn--primary btn--sm">
+                            <i class="bi bi-search"></i>
+                            Найти мероприятие
+                        </a>
+                        <a href="{% url 'catalog:my_registrations' %}" class="btn btn--ghost btn--sm">
+                            <i class="bi bi-journal-check"></i>
+                            Мои заявки
+                        </a>
+                        <a href="{% url 'users:settings' %}" class="btn btn--ghost btn--sm">
+                            <i class="bi bi-gear"></i>
+                            Настройки
+                        </a>
+                        <a href="{% url 'catalog:feedback' %}" class="btn btn--ghost btn--sm">
+                            <i class="bi bi-chat-dots"></i>
+                            Обратная связь
+                        </a>
+                    </div>
+                </article>
+
+                <article class="cabinet-card">
+                    <header class="cabinet-card__header">
+                        <h3 class="cabinet-card__title">
+                            <i class="bi bi-stars"></i>
+                            Рекомендуем
+                        </h3>
+                        <a href="{% url 'catalog:events' %}" class="cabinet-card__link">
+                            Весь каталог
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </header>
+                    {% if recommended_events %}
+                        <div class="cabinet-reco">
+                            {% for event in recommended_events %}
+                                <a href="{% url 'catalog:event_detail' event.slug %}" class="cabinet-reco__card">
+                                    <span class="cabinet-reco__badge">
+                                        <i class="bi bi-bookmark-star"></i>
+                                        {{ event.event_type.title }}
+                                    </span>
+                                    <h4 class="cabinet-reco__title">{{ event.title }}</h4>
+                                    <ul class="cabinet-reco__meta">
+                                        <li><i class="bi bi-calendar3"></i>{{ event.date_full }}</li>
+                                        {% if event.location %}
+                                            <li><i class="bi bi-geo-alt"></i>{{ event.location }}</li>
+                                        {% endif %}
+                                        <li><i class="bi bi-bookmark"></i>{{ event.direction.title }}</li>
+                                    </ul>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="cabinet-empty">
+                            <i class="bi bi-calendar-check"></i>
+                            <p>
+                                Вы уже подали заявки на все рекомендуемые
+                                события — загляните в каталог, чтобы найти
+                                ещё что-то интересное.
+                            </p>
+                        </div>
+                    {% endif %}
+                </article>
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}
