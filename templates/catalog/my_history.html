@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}История участий — Личный кабинет{% endblock %}
+
+{% block meta_description %}Хронология ваших участий в научных мероприятиях: все посещённые конференции, семинары и форумы, сгруппированные по годам.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cabinet.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="admin-page">
+    <div class="container">
+        <header class="admin-page__header">
+            <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+                <a href="{% url 'catalog:landing' %}">Главная</a>
+                <i class="bi bi-chevron-right"></i>
+                <a href="{% url 'catalog:dashboard' %}">Личный кабинет</a>
+                <i class="bi bi-chevron-right"></i>
+                <span>История участий</span>
+            </nav>
+
+            <span class="admin-page__eyebrow">
+                <i class="bi bi-clock-history"></i>
+                Личный кабинет
+            </span>
+            <h1 class="admin-page__title">История участий</h1>
+            <p class="admin-page__lead">
+                Хронология мероприятий, в которых вы приняли участие. Здесь
+                отображаются только те события, по которым ваша заявка была
+                подтверждена и дата проведения уже прошла.
+            </p>
+
+            {% include 'catalog/cabinet/_tabs.html' with active_tab='history' %}
+        </header>
+
+        {% if stats.total %}
+            <div class="admin-stats">
+                <div class="admin-stat admin-stat--admin">
+                    <div class="admin-stat__value">{{ stats.total }}</div>
+                    <div class="admin-stat__label">Всего посещений</div>
+                </div>
+                <div class="admin-stat admin-stat--user">
+                    <div class="admin-stat__value">{{ stats.current_year }}</div>
+                    <div class="admin-stat__label">В {{ current_year }} году</div>
+                </div>
+                <div class="admin-stat">
+                    <div class="admin-stat__value">{{ stats.directions_count }}</div>
+                    <div class="admin-stat__label">Направлений</div>
+                </div>
+                <div class="admin-stat admin-stat--curator">
+                    <div class="admin-stat__value">{{ stats.event_types_count }}</div>
+                    <div class="admin-stat__label">Типов событий</div>
+                </div>
+            </div>
+
+            {% if directions_breakdown %}
+                <article class="cabinet-card" style="margin-bottom: 28px;">
+                    <header class="cabinet-card__header">
+                        <h3 class="cabinet-card__title">
+                            <i class="bi bi-diagram-3"></i>
+                            Ваш научный профиль
+                        </h3>
+                        <a href="{% url 'catalog:events' %}" class="cabinet-card__link">
+                            Новые мероприятия
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </header>
+                    <p class="admin-page__lead" style="margin:0;font-size:14px;">
+                        Направления и типы мероприятий, в которых вы чаще всего участвовали.
+                    </p>
+                    <div class="history-chips">
+                        {% for row in directions_breakdown %}
+                            <span class="history-chip">
+                                <i class="bi bi-bookmark-fill"></i>
+                                {{ row.event__direction__title }}
+                                <span class="history-chip__count">{{ row.count }}</span>
+                            </span>
+                        {% endfor %}
+                    </div>
+                    {% if event_types_breakdown %}
+                        <div class="history-chips">
+                            {% for row in event_types_breakdown %}
+                                <span class="history-chip">
+                                    <i class="bi bi-tag-fill"></i>
+                                    {{ row.event__event_type__title }}
+                                    <span class="history-chip__count">{{ row.count }}</span>
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </article>
+            {% endif %}
+
+            <div class="history-timeline">
+                {% regroup registrations by event.starts_at.year as year_groups %}
+                {% for year_group in year_groups %}
+                    <section class="history-year">
+                        <header class="history-year__header">
+                            <span class="history-year__label">{{ year_group.grouper }}</span>
+                            <span class="history-year__count">
+                                {{ year_group.list|length }}
+                                участи{{ year_group.list|length|pluralize:"е,я,й" }}
+                            </span>
+                            {% if year_group.grouper == current_year %}
+                                <span class="history-year__current">
+                                    <i class="bi bi-dot"></i>
+                                    Текущий год
+                                </span>
+                            {% endif %}
+                        </header>
+
+                        <ol class="history-year__list">
+                            {% for reg in year_group.list %}
+                                <li class="history-item">
+                                    <div class="history-item__date" aria-hidden="true">
+                                        <span class="history-item__day">{{ reg.event.date_day }}</span>
+                                        <span class="history-item__month">{{ reg.event.date_month_short }}</span>
+                                    </div>
+                                    <div class="history-item__body">
+                                        <div class="history-item__tags">
+                                            <span class="history-item__type">{{ reg.event.event_type.title }}</span>
+                                            <span class="history-item__status">
+                                                <i class="bi bi-check-circle-fill"></i>
+                                                Посещено
+                                            </span>
+                                        </div>
+                                        <h3 class="history-item__title">
+                                            <a href="{% url 'catalog:event_detail' reg.event.slug %}">
+                                                {{ reg.event.title }}
+                                            </a>
+                                        </h3>
+                                        <ul class="history-item__meta">
+                                            <li>
+                                                <i class="bi bi-calendar3"></i>
+                                                {{ reg.event.date_full }}
+                                            </li>
+                                            <li>
+                                                <i class="bi bi-clock"></i>
+                                                {{ reg.event.time_range }}
+                                            </li>
+                                            <li>
+                                                <i class="bi bi-bookmark"></i>
+                                                {{ reg.event.direction.title }}
+                                            </li>
+                                            {% if reg.event.location %}
+                                                <li>
+                                                    <i class="bi bi-geo-alt"></i>
+                                                    {{ reg.event.location }}
+                                                </li>
+                                            {% endif %}
+                                            <li>
+                                                <i class="bi bi-broadcast"></i>
+                                                {{ reg.event.get_event_format_display }}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <a href="{% url 'catalog:event_detail' reg.event.slug %}"
+                                       class="history-item__action">
+                                        Подробнее
+                                        <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ol>
+                    </section>
+                {% endfor %}
+            </div>
+
+            {% if is_paginated %}
+                <nav class="history-pagination" aria-label="Страницы истории">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}"
+                           class="history-pagination__link">
+                            <i class="bi bi-chevron-left"></i>
+                            Назад
+                        </a>
+                    {% endif %}
+                    <span class="history-pagination__current">
+                        Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                    </span>
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}"
+                           class="history-pagination__link">
+                            Далее
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="history-empty">
+                <i class="bi bi-hourglass-split"></i>
+                <h3>История пока пуста</h3>
+                <p>
+                    Здесь появятся все мероприятия, в которых вы примете участие.
+                    Загляните в каталог — возможно, уже сейчас идёт регистрация
+                    на что-то интересное.
+                </p>
+                <a href="{% url 'catalog:events' %}" class="btn btn--primary">
+                    <i class="bi bi-calendar2-event"></i>
+                    Открыть каталог мероприятий
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

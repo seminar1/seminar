@@ -460,6 +460,82 @@ class MyRegistrationsView(LoginRequiredMixin, ListView):
         return context
 
 
+class MyHistoryView(LoginRequiredMixin, ListView):
+    """Страница «История участий» личного кабинета.
+
+    Показывает только подтверждённые заявки пользователя на мероприятия,
+    которые уже прошли (``event__starts_at < now``). Даёт сводку по годам
+    и направлениям, а также таймлайн участий, сгруппированный по годам.
+    """
+
+    model = EventRegistration
+    template_name = 'catalog/my_history.html'
+    context_object_name = 'registrations'
+    paginate_by = 30
+
+    def get_queryset(self):
+        """Возвращает прошедшие подтверждённые заявки пользователя."""
+        now = timezone.now()
+        return (
+            EventRegistration.objects
+            .filter(
+                user=self.request.user,
+                status=EventRegistration.Status.CONFIRMED,
+                event__starts_at__lt=now,
+            )
+            .select_related('event', 'event__direction', 'event__event_type')
+            .order_by('-event__starts_at')
+        )
+
+    def get_context_data(self, **kwargs):
+        """Добавляет агрегированную статистику участия."""
+        context = super().get_context_data(**kwargs)
+        now = timezone.now()
+        base_qs = EventRegistration.objects.filter(
+            user=self.request.user,
+            status=EventRegistration.Status.CONFIRMED,
+            event__starts_at__lt=now,
+        )
+
+        total = base_qs.count()
+        current_year_total = base_qs.filter(
+            event__starts_at__year=now.year,
+        ).count()
+
+        directions = (
+            base_qs
+            .values('event__direction__title')
+            .annotate(count=Count('id'))
+            .order_by('-count', 'event__direction__title')
+        )
+        event_types = (
+            base_qs
+            .values('event__event_type__title')
+            .annotate(count=Count('id'))
+            .order_by('-count', 'event__event_type__title')
+        )
+
+        first_event = (
+            base_qs.select_related('event').order_by('event__starts_at').first()
+        )
+        last_event = (
+            base_qs.select_related('event').order_by('-event__starts_at').first()
+        )
+
+        context['stats'] = {
+            'total': total,
+            'current_year': current_year_total,
+            'directions_count': directions.count(),
+            'event_types_count': event_types.count(),
+            'first_event': first_event.event if first_event else None,
+            'last_event': last_event.event if last_event else None,
+        }
+        context['directions_breakdown'] = list(directions[:10])
+        context['event_types_breakdown'] = list(event_types[:10])
+        context['current_year'] = now.year
+        return context
+
+
 class FaqView(TemplateView):
     """Страница «Часто задаваемые вопросы» с категориями и поиском."""
 
