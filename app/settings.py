@@ -15,7 +15,8 @@ SECRET_KEY = "django-insecure-flqyj%it1=nc+syd3^!)_b%)8lgp$ssod3_t-t#@#^=tt+7h_s
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["seminar-seminar1.amvera.io"]
+CSRF_TRUSTED_ORIGINS = ["https://seminar-seminar1.amvera.io"]
 
 
 INSTALLED_APPS = [
@@ -60,20 +61,31 @@ TEMPLATES = [
 WSGI_APPLICATION = "app.wsgi.application"
 
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.mysql",
+#         "NAME": "seminar",
+#         "USER": "root",
+#         "PASSWORD": "root",
+#         "HOST": "localhost",
+#         "PORT": "3306",
+#         "OPTIONS": {
+#             "charset": "utf8mb4",
+#         },
+#     }
+# }
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "seminar",
         "USER": "root",
         "PASSWORD": "root",
-        "HOST": "localhost",
+        "HOST": "amvera-seminar1-run-seminar-db",
         "PORT": "3306",
-        "OPTIONS": {
-            "charset": "utf8mb4",
-        },
+        "OPTIONS": {"charset": "utf8mb4"},
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
