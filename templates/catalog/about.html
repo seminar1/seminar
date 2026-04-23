@@ -187,10 +187,17 @@
             </p>
         </div>
         <div class="about-cta__actions">
-            <a href="#" class="btn btn--primary btn--lg">
-                <i class="bi bi-person-plus"></i>
-                Зарегистрироваться
-            </a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'catalog:events' %}" class="btn btn--primary btn--lg">
+                    <i class="bi bi-calendar2-event"></i>
+                    Смотреть мероприятия
+                </a>
+            {% else %}
+                <a href="{% url 'users:register' %}" class="btn btn--primary btn--lg">
+                    <i class="bi bi-person-plus"></i>
+                    Зарегистрироваться
+                </a>
+            {% endif %}
             <a href="{% url 'catalog:feedback' %}" class="btn btn--outline btn--lg">
                 <i class="bi bi-chat-dots"></i>
                 Связаться с нами

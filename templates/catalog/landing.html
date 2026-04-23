@@ -34,10 +34,17 @@
                     <i class="bi bi-calendar2-event"></i>
                     Смотреть мероприятия
                 </a>
-                <a href="#" class="btn btn--outline btn--lg">
-                    <i class="bi bi-person-plus"></i>
-                    Создать аккаунт
-                </a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'catalog:my_registrations' %}" class="btn btn--outline btn--lg">
+                        <i class="bi bi-journal-check"></i>
+                        Мои заявки
+                    </a>
+                {% else %}
+                    <a href="{% url 'users:register' %}" class="btn btn--outline btn--lg">
+                        <i class="bi bi-person-plus"></i>
+                        Создать аккаунт
+                    </a>
+                {% endif %}
             </div>
 
             <dl class="hero__stats">
@@ -215,21 +222,40 @@
 <section class="cta">
     <div class="container cta__inner">
         <div class="cta__content">
-            <h2 class="cta__title">Готовы присоединиться к научному сообществу МУИВ?</h2>
-            <p class="cta__text">
-                Создайте аккаунт за минуту и получите доступ ко всем возможностям
-                электронного каталога научных мероприятий университета.
-            </p>
+            {% if user.is_authenticated %}
+                <h2 class="cta__title">Откройте для себя все возможности «Научного Центра»</h2>
+                <p class="cta__text">
+                    Следите за ближайшими мероприятиями, подавайте заявки
+                    и получайте сертификаты в своём личном кабинете.
+                </p>
+            {% else %}
+                <h2 class="cta__title">Готовы присоединиться к научному сообществу МУИВ?</h2>
+                <p class="cta__text">
+                    Создайте аккаунт за минуту и получите доступ ко всем возможностям
+                    электронного каталога научных мероприятий университета.
+                </p>
+            {% endif %}
         </div>
         <div class="cta__actions">
-            <a href="#" class="btn btn--primary btn--lg">
-                <i class="bi bi-person-plus"></i>
-                Зарегистрироваться
-            </a>
-            <a href="#" class="btn btn--outline btn--lg btn--outline-light">
-                <i class="bi bi-box-arrow-in-right"></i>
-                Войти
-            </a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'catalog:events' %}" class="btn btn--primary btn--lg">
+                    <i class="bi bi-calendar2-event"></i>
+                    Смотреть мероприятия
+                </a>
+                <a href="{% url 'catalog:my_registrations' %}" class="btn btn--outline btn--lg btn--outline-light">
+                    <i class="bi bi-journal-check"></i>
+                    Мои заявки
+                </a>
+            {% else %}
+                <a href="{% url 'users:register' %}" class="btn btn--primary btn--lg">
+                    <i class="bi bi-person-plus"></i>
+                    Зарегистрироваться
+                </a>
+                <a href="{% url 'users:login' %}" class="btn btn--outline btn--lg btn--outline-light">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Войти
+                </a>
+            {% endif %}
         </div>
     </div>
 </section>
