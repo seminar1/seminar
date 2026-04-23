@@ -4,6 +4,7 @@ from django.urls import path, register_converter
 from catalog.converters import UnicodeSlugConverter
 from catalog.views import (
     AboutView,
+    BenefitsView,
     ContactsView,
     CuratorDirectionDeleteView,
     CuratorDirectionsView,
@@ -53,6 +54,7 @@ urlpatterns = [
         name='my_registrations',
     ),
     path('about/', AboutView.as_view(), name='about'),
+    path('benefits/', BenefitsView.as_view(), name='benefits'),
     path('faq/', FaqView.as_view(), name='faq'),
     path('contacts/', ContactsView.as_view(), name='contacts'),
     path('feedback/', FeedbackView.as_view(), name='feedback'),

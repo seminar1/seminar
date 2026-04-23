@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Преимущества — Научный Центр МУИВ им. С.Ю. Витте{% endblock %}
+
+{% block meta_description %}Преимущества электронного каталога научных мероприятий МУИВ им. С.Ю. Витте: быстрая онлайн-регистрация, единая витрина событий, личный кабинет и сертификаты.{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/benefits.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="benefits-hero">
+    <div class="benefits-hero__backdrop" aria-hidden="true">
+        <span class="benefits-hero__blob benefits-hero__blob--1"></span>
+        <span class="benefits-hero__blob benefits-hero__blob--2"></span>
+    </div>
+    <div class="container benefits-hero__inner">
+        <nav class="breadcrumbs" aria-label="Навигационная цепочка">
+            <a href="{% url 'catalog:landing' %}">Главная</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Преимущества</span>
+        </nav>
+        <span class="benefits-hero__eyebrow">
+            <i class="bi bi-stars"></i>
+            Почему «Научный Центр»
+        </span>
+        <h1 class="benefits-hero__title">
+            Преимущества единой <span class="benefits-hero__title-accent">цифровой платформы</span>
+            научных мероприятий
+        </h1>
+        <p class="benefits-hero__lead">
+            «Научный Центр» упрощает участие и организацию конференций,
+            семинаров и круглых столов МУИВ им. С.Ю. Витте. Все инструменты —
+            каталог событий, регистрация, сертификаты и аналитика — в одном
+            интерфейсе, доступном 24/7.
+        </p>
+
+        <div class="benefits-hero__highlights">
+            {% for item in hero_highlights %}
+            <div class="benefits-highlight">
+                <span class="benefits-highlight__icon" aria-hidden="true">
+                    <i class="bi {{ item.icon }}"></i>
+                </span>
+                <div class="benefits-highlight__body">
+                    <h3 class="benefits-highlight__title">{{ item.title }}</h3>
+                    <p class="benefits-highlight__text">{{ item.text }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="benefits-features">
+    <div class="container">
+        <header class="section__header">
+            <span class="section__eyebrow">Ключевые возможности</span>
+            <h2 class="section__title">Всё, что нужно участнику научной жизни</h2>
+            <p class="section__lead">
+                Мы собрали в одном месте инструменты, которые делают
+                взаимодействие с научными событиями удобным и прозрачным.
+            </p>
+        </header>
+
+        <div class="benefits-features__grid">
+            {% for benefit in key_benefits %}
+            <article class="benefit-card">
+                <span class="benefit-card__icon" aria-hidden="true">
+                    <i class="bi {{ benefit.icon }}"></i>
+                </span>
+                <h3 class="benefit-card__title">{{ benefit.title }}</h3>
+                <p class="benefit-card__text">{{ benefit.text }}</p>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="benefits-compare">
+    <div class="container">
+        <header class="section__header">
+            <span class="section__eyebrow">До и после</span>
+            <h2 class="section__title">Как меняется работа с научными событиями</h2>
+            <p class="section__lead">
+                Сравните привычный процесс с возможностями «Научного Центра».
+            </p>
+        </header>
+
+        <div class="compare__grid">
+            <article class="compare-card compare-card--before">
+                <header class="compare-card__header">
+                    <span class="compare-card__icon" aria-hidden="true">
+                        <i class="bi {{ comparison.before.icon }}"></i>
+                    </span>
+                    <h3 class="compare-card__title">{{ comparison.before.title }}</h3>
+                </header>
+                <ul class="compare-card__list">
+                    {% for item in comparison.before.items %}
+                    <li>
+                        <i class="bi bi-x-circle"></i>
+                        <span>{{ item }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </article>
+
+            <article class="compare-card compare-card--after">
+                <header class="compare-card__header">
+                    <span class="compare-card__icon" aria-hidden="true">
+                        <i class="bi {{ comparison.after.icon }}"></i>
+                    </span>
+                    <h3 class="compare-card__title">{{ comparison.after.title }}</h3>
+                </header>
+                <ul class="compare-card__list">
+                    {% for item in comparison.after.items %}
+                    <li>
+                        <i class="bi bi-check2-circle"></i>
+                        <span>{{ item }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="benefits-metrics">
+    <div class="container">
+        <div class="metrics__grid">
+            {% for metric in metrics %}
+            <div class="metrics__item">
+                <div class="metrics__value">{{ metric.value }}</div>
+                <div class="metrics__label">{{ metric.label }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="benefits-faq">
+    <div class="container">
+        <header class="section__header">
+            <span class="section__eyebrow">Частые вопросы</span>
+            <h2 class="section__title">Коротко о главном</h2>
+            <p class="section__lead">
+                Если остались вопросы — загляните в раздел
+                <a href="{% url 'catalog:faq' %}" class="benefits-faq__link">«Вопросы и ответы»</a>
+                или напишите нам через форму обратной связи.
+            </p>
+        </header>
+
+        <div class="benefits-faq__list">
+            {% for item in faq %}
+            <details class="faq-item">
+                <summary class="faq-item__summary">
+                    <span class="faq-item__question">{{ item.question }}</span>
+                    <span class="faq-item__icon" aria-hidden="true">
+                        <i class="bi bi-plus-lg"></i>
+                    </span>
+                </summary>
+                <div class="faq-item__answer">
+                    <p>{{ item.answer }}</p>
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="benefits-cta">
+    <div class="container benefits-cta__inner">
+        <div class="benefits-cta__content">
+            <h2 class="benefits-cta__title">Присоединяйтесь к научному сообществу МУИВ</h2>
+            <p class="benefits-cta__text">
+                Создайте аккаунт, чтобы регистрироваться на мероприятия,
+                получать сертификаты и отслеживать статус заявок в личном кабинете.
+            </p>
+        </div>
+        <div class="benefits-cta__actions">
+            {% if user.is_authenticated %}
+                <a href="{% url 'catalog:events' %}" class="btn btn--primary btn--lg">
+                    <i class="bi bi-calendar2-event"></i>
+                    Смотреть мероприятия
+                </a>
+                <a href="{% url 'catalog:my_registrations' %}" class="btn btn--outline btn--lg">
+                    <i class="bi bi-journal-check"></i>
+                    Мои заявки
+                </a>
+            {% else %}
+                <a href="{% url 'users:register' %}" class="btn btn--primary btn--lg">
+                    <i class="bi bi-person-plus"></i>
+                    Зарегистрироваться
+                </a>
+                <a href="{% url 'catalog:events' %}" class="btn btn--outline btn--lg">
+                    <i class="bi bi-calendar2-event"></i>
+                    Смотреть каталог
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
