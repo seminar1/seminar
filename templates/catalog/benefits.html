@@ -174,7 +174,7 @@
             </p>
         </div>
         <div class="benefits-cta__actions">
-            {% if user.is_authenticated %}
+            {% if user.is_authenticated and user.is_regular_user %}
                 <a href="{% url 'catalog:events' %}" class="btn btn--primary btn--lg">
                     <i class="bi bi-calendar2-event"></i>
                     Смотреть мероприятия
@@ -182,6 +182,24 @@
                 <a href="{% url 'catalog:my_registrations' %}" class="btn btn--outline btn--lg">
                     <i class="bi bi-journal-check"></i>
                     Мои заявки
+                </a>
+            {% elif user.is_authenticated and user.is_curator %}
+                <a href="{% url 'catalog:events' %}" class="btn btn--primary btn--lg">
+                    <i class="bi bi-calendar2-event"></i>
+                    Смотреть мероприятия
+                </a>
+                <a href="{% url 'catalog:curator_events' %}" class="btn btn--outline btn--lg">
+                    <i class="bi bi-briefcase"></i>
+                    Панель куратора
+                </a>
+            {% elif user.is_authenticated and user.is_administrator %}
+                <a href="{% url 'catalog:events' %}" class="btn btn--primary btn--lg">
+                    <i class="bi bi-calendar2-event"></i>
+                    Смотреть мероприятия
+                </a>
+                <a href="{% url 'users:admin_users' %}" class="btn btn--outline btn--lg">
+                    <i class="bi bi-shield-lock"></i>
+                    Админ-панель
                 </a>
             {% else %}
                 <a href="{% url 'users:register' %}" class="btn btn--primary btn--lg">

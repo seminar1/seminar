@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Новое мероприятие — Панель куратора{% endblock %}
+{% block title %}{% if is_edit %}Редактирование мероприятия{% else %}Новое мероприятие{% endif %} — Панель куратора{% endblock %}
 
-{% block meta_description %}Создание нового научного мероприятия в кураторской панели электронного каталога МУИВ.{% endblock %}
+{% block meta_description %}{% if is_edit %}Редактирование научного мероприятия в кураторской панели электронного каталога МУИВ.{% else %}Создание нового научного мероприятия в кураторской панели электронного каталога МУИВ.{% endif %}{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/admin.css' %}">
@@ -15,15 +15,28 @@
     <div class="container curator-form-wrap">
         <header class="admin-page__header">
             {% url 'catalog:curator_events' as u_curator_events %}
+            {% if is_edit %}
+            {% include 'includes/breadcrumbs_3.html' with parent_url=u_curator_events parent_label='Панель куратора' current='Редактирование' %}
+            {% else %}
             {% include 'includes/breadcrumbs_3.html' with parent_url=u_curator_events parent_label='Панель куратора' current='Новое мероприятие' %}
+            {% endif %}
             <span class="admin-page__eyebrow curator-header__eyebrow">
+                {% if is_edit %}
+                <i class="bi bi-pencil-square"></i>
+                Редактирование
+                {% else %}
                 <i class="bi bi-plus-circle"></i>
                 Создание
+                {% endif %}
             </span>
-            <h1 class="admin-page__title">Новое научное мероприятие</h1>
+            <h1 class="admin-page__title">{% if is_edit %}Редактирование мероприятия{% else %}Новое научное мероприятие{% endif %}</h1>
             <p class="admin-page__lead">
+                {% if is_edit %}
+                Внесите изменения и сохраните форму. Поля, отмеченные звёздочкой, обязательны.
+                {% else %}
                 Заполните информацию о мероприятии. Поля, отмеченные
                 звёздочкой, обязательны.
+                {% endif %}
             </p>
         </header>
 
@@ -228,7 +241,7 @@
                 </a>
                 <button type="submit" class="btn btn--primary btn--lg">
                     <i class="bi bi-check2-circle"></i>
-                    Создать мероприятие
+                    {% if is_edit %}Сохранить изменения{% else %}Создать мероприятие{% endif %}
                 </button>
             </div>
         </form>

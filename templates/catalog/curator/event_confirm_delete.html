@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Удаление мероприятия — Панель куратора{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/curator.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="admin-page">
+    <div class="container curator-form-wrap">
+        <header class="admin-page__header">
+            {% url 'catalog:curator_events' as u_curator_events %}
+            {% include 'includes/breadcrumbs_3.html' with parent_url=u_curator_events parent_label='Панель куратора' current='Удаление' %}
+            <span class="admin-page__eyebrow curator-header__eyebrow">
+                <i class="bi bi-exclamation-triangle"></i>
+                Подтверждение
+            </span>
+            <h1 class="admin-page__title">Удалить мероприятие?</h1>
+            <p class="admin-page__lead">
+                Будет безвозвратно удалено мероприятие
+                <strong>«{{ event.title }}»</strong> и все связанные с ним заявки участников.
+            </p>
+        </header>
+
+        <div class="curator-form__actions" style="margin-top: 8px;">
+            <form method="post" action="">
+                {% csrf_token %}
+                <button type="submit" class="btn btn--primary btn--lg" style="background: #b91c1c; border-color: #b91c1c;">
+                    <i class="bi bi-trash"></i>
+                    Да, удалить
+                </button>
+                <a href="{% url 'catalog:curator_events' %}" class="btn btn--ghost btn--lg">Отмена</a>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

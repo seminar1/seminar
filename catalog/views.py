@@ -2,7 +2,7 @@
 from io import BytesIO
 
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db import transaction
 from django.db.models import Count, Max, ProtectedError, Q
 from django.http import HttpResponse, HttpResponseRedirect
@@ -12,9 +12,11 @@ from django.utils import timezone
 from django.utils.http import urlencode, url_has_allowed_host_and_scheme
 from django.views.generic import (
     CreateView,
+    DeleteView,
     DetailView,
     ListView,
     TemplateView,
+    UpdateView,
     View,
 )
 
@@ -343,7 +345,11 @@ class EventRegistrationCancelView(LoginRequiredMixin, View):
                 request,
                 'Эта заявка уже не активна.',
             )
-            return redirect('catalog:my_registrations')
+            if request.user.is_regular_user:
+                return redirect('catalog:my_registrations')
+            return redirect(
+                'catalog:event_detail', slug=registration.event.slug
+            )
 
         event = registration.event
         was_confirmed = registration.status == EventRegistration.Status.CONFIRMED
@@ -377,10 +383,17 @@ class EventRegistrationCancelView(LoginRequiredMixin, View):
             f'Заявка на «{event.title}» отменена.',
         )
 
+        default_target = (
+            'catalog:my_registrations'
+            if request.user.is_regular_user
+            else reverse('catalog:event_detail', kwargs={'slug': event.slug})
+        )
         next_url = request.POST.get('next')
         if next_url:
-            return redirect(next_url)
-        return redirect('catalog:my_registrations')
+            return redirect(
+                _safe_post_redirect_url(request, default_target)
+            )
+        return redirect(default_target)
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -458,8 +471,22 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class MyRegistrationsView(LoginRequiredMixin, ListView):
+class MyRegistrationsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     """Личный список заявок пользователя на научные мероприятия."""
+
+    def test_func(self):
+        """Доступ только у обычных участников (роль «Пользователь»)."""
+        user = self.request.user
+        return user.is_authenticated and user.is_regular_user
+
+    def handle_no_permission(self):
+        if not self.request.user.is_authenticated:
+            return super().handle_no_permission()
+        messages.info(
+            self.request,
+            'Раздел «Мои заявки» предназначен для участников каталога.',
+        )
+        return redirect('catalog:events')
 
     model = EventRegistration
     template_name = 'catalog/my_registrations.html'
@@ -966,7 +993,11 @@ class FeedbackView(View):
     def post(self, request, *args, **kwargs):
         """Валидирует форму, сохраняет обращение и перенаправляет пользователя."""
         user = request.user if request.user.is_authenticated else None
-        form = FeedbackMessageForm(request.POST, user=user)
+        form = FeedbackMessageForm(
+            request.POST,
+            request.FILES,
+            user=user,
+        )
 
         if not form.is_valid():
             messages.error(
@@ -2565,7 +2596,53 @@ class CuratorEventCreateView(CuratorRequiredMixin, CreateView):
         """Передаёт в шаблон активную вкладку панели куратора."""
         context = super().get_context_data(**kwargs)
         context['active_tab'] = 'events'
+        context['is_edit'] = False
         return context
+
+
+class CuratorEventUpdateView(CuratorRequiredMixin, UpdateView):
+    """Редактирование существующего мероприятия куратором."""
+
+    model = Event
+    form_class = EventForm
+    template_name = 'catalog/curator/event_form.html'
+
+    def get_success_url(self):
+        return reverse('catalog:curator_events')
+
+    def form_valid(self, form):
+        messages.success(
+            self.request,
+            f'Мероприятие «{form.instance.title}» сохранено.',
+        )
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['active_tab'] = 'events'
+        context['is_edit'] = True
+        return context
+
+
+class CuratorEventDeleteView(CuratorRequiredMixin, DeleteView):
+    """Удаление мероприятия куратором (и связанных заявок)."""
+
+    model = Event
+    template_name = 'catalog/curator/event_confirm_delete.html'
+    context_object_name = 'event'
+
+    def get_success_url(self):
+        return reverse('catalog:curator_events')
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        title = self.object.title
+        result = super().delete(request, *args, **kwargs)
+        messages.success(
+            request,
+            f'Мероприятие «{title}» удалено.',
+        )
+        return result
 
 
 class CuratorRegistrationsView(CuratorRequiredMixin, ListView):

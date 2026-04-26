@@ -8,6 +8,7 @@
 """
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
@@ -822,6 +823,21 @@ class FeedbackMessage(models.Model):
     message = models.TextField(
         'Сообщение',
         help_text='Текст обращения.',
+    )
+    attachment = models.FileField(
+        'Вложение',
+        upload_to='feedback/attachments/%Y/%m/',
+        blank=True,
+        null=True,
+        help_text='Необязательно: PDF, документ, изображение или архив.',
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=[
+                    'pdf', 'doc', 'docx', 'odt', 'txt', 'rtf',
+                    'png', 'jpg', 'jpeg', 'gif', 'webp', 'zip',
+                ],
+            ),
+        ],
     )
 
     consent_to_processing = models.BooleanField(

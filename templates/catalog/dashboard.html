@@ -103,10 +103,12 @@
                                 <i class="bi bi-calendar2-event"></i>
                                 Открыть мероприятие
                             </a>
+                            {% if user.is_regular_user %}
                             <a href="{% url 'catalog:my_registrations' %}" class="btn btn--outline">
                                 <i class="bi bi-journal-check"></i>
                                 Все заявки
                             </a>
+                            {% endif %}
                         </div>
                     </article>
                 {% else %}
@@ -137,7 +139,7 @@
                             <i class="bi bi-clock-history"></i>
                             Последние заявки
                         </h3>
-                        {% if recent_registrations %}
+                        {% if recent_registrations and user.is_regular_user %}
                             <a href="{% url 'catalog:my_registrations' %}" class="cabinet-card__link">
                                 Все заявки
                                 <i class="bi bi-arrow-right"></i>
@@ -195,10 +197,12 @@
                             <i class="bi bi-search"></i>
                             Найти мероприятие
                         </a>
+                        {% if user.is_regular_user %}
                         <a href="{% url 'catalog:my_registrations' %}" class="btn btn--ghost btn--sm">
                             <i class="bi bi-journal-check"></i>
                             Мои заявки
                         </a>
+                        {% endif %}
                         <a href="{% url 'users:settings' %}" class="btn btn--ghost btn--sm">
                             <i class="bi bi-gear"></i>
                             Настройки

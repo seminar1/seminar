@@ -79,6 +79,16 @@
                         {{ feedback.message|linebreaksbr }}
                     </div>
 
+                    {% if feedback.attachment %}
+                        <div class="feedback-detail-card__related" style="margin-top: 12px;">
+                            <span class="feedback-detail-card__related-label">Вложение:</span>
+                            <a href="{{ feedback.attachment.url }}" target="_blank" rel="noopener" class="btn btn--ghost btn--sm">
+                                <i class="bi bi-paperclip"></i>
+                                Скачать файл
+                            </a>
+                        </div>
+                    {% endif %}
+
                     {% if feedback.related_event %}
                         <div class="feedback-detail-card__related">
                             <span class="feedback-detail-card__related-label">Связанное мероприятие:</span>

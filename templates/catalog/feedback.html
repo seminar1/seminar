@@ -68,7 +68,7 @@
                     </div>
                 {% endif %}
 
-                <form method="post" class="feedback-form" novalidate>
+                <form method="post" enctype="multipart/form-data" class="feedback-form" novalidate>
                     {% csrf_token %}
 
                     {% if form.non_field_errors %}
@@ -169,6 +169,21 @@
                         {% else %}
                             <span class="feedback-form__hint">
                                 Опишите вопрос подробно — это ускорит ответ.
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="feedback-form__field">
+                        <label for="{{ form.attachment.id_for_label }}" class="feedback-form__label">
+                            Прикрепить файл
+                        </label>
+                        {{ form.attachment }}
+                        {% if form.attachment.errors %}
+                            <span class="feedback-form__error">{{ form.attachment.errors.0 }}</span>
+                        {% else %}
+                            <span class="feedback-form__hint">
+                                Необязательно: PDF, Word, OpenDocument, изображение или ZIP.
+                                Максимум 5 МБ.
                             </span>
                         {% endif %}
                     </div>

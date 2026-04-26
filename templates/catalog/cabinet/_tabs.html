@@ -9,11 +9,13 @@
         <i class="bi bi-speedometer2"></i>
         Обзор
     </a>
+    {% if user.is_regular_user %}
     <a href="{% url 'catalog:my_registrations' %}"
        class="admin-tabs__link {% if active_tab == 'registrations' %}is-active{% endif %}">
         <i class="bi bi-journal-check"></i>
         Мои заявки
     </a>
+    {% endif %}
     <a href="{% url 'catalog:my_history' %}"
        class="admin-tabs__link {% if active_tab == 'history' %}is-active{% endif %}">
         <i class="bi bi-clock-history"></i>

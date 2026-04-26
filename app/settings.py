@@ -61,31 +61,31 @@ TEMPLATES = [
 WSGI_APPLICATION = "app.wsgi.application"
 
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.mysql",
-#         "NAME": "seminar",
-#         "USER": "root",
-#         "PASSWORD": "root",
-#         "HOST": "localhost",
-#         "PORT": "3306",
-#         "OPTIONS": {
-#             "charset": "utf8mb4",
-#         },
-#     }
-# }
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "seminar",
         "USER": "root",
         "PASSWORD": "root",
-        "HOST": "amvera-seminar1-run-seminar-db",
+        "HOST": "localhost",
         "PORT": "3306",
-        "OPTIONS": {"charset": "utf8mb4"},
+        "OPTIONS": {
+            "charset": "utf8mb4",
+        },
     }
 }
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.mysql",
+#         "NAME": "seminar",
+#         "USER": "root",
+#         "PASSWORD": "root",
+#         "HOST": "amvera-seminar1-run-seminar-db",
+#         "PORT": "3306",
+#         "OPTIONS": {"charset": "utf8mb4"},
+#     }
+# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {

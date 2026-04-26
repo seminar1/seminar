@@ -1,5 +1,6 @@
 """Формы приложения catalog: управление мероприятиями и справочниками."""
 from django import forms
+from django.core.exceptions import ValidationError
 
 from catalog.models import (
     Direction,
@@ -319,6 +320,7 @@ class FeedbackMessageForm(forms.ModelForm):
             'organization',
             'subject',
             'message',
+            'attachment',
             'consent_to_processing',
             'subscribe_to_news',
         )
@@ -357,6 +359,9 @@ class FeedbackMessageForm(forms.ModelForm):
                     ),
                 }
             ),
+            'attachment': forms.ClearableFileInput(
+                attrs={'class': 'feedback-form__file', 'accept': '.pdf,.doc,.docx,.odt,.txt,.rtf,.png,.jpg,.jpeg,.gif,.webp,.zip'}
+            ),
         }
 
     def __init__(self, *args, user=None, **kwargs):
@@ -372,6 +377,8 @@ class FeedbackMessageForm(forms.ModelForm):
         self.fields['full_name'].required = True
         self.fields['email'].required = True
         self.fields['message'].required = True
+        self.fields['attachment'].required = False
+        self.fields['attachment'].label = 'Прикрепить файл'
 
         if user is not None and user.is_authenticated and not self.is_bound:
             self.fields['full_name'].initial = (
@@ -387,11 +394,28 @@ class FeedbackMessageForm(forms.ModelForm):
             if name in ('consent_to_processing', 'subscribe_to_news'):
                 field.widget.attrs.setdefault('class', 'feedback-form__checkbox')
                 continue
+            if name == 'attachment':
+                existing = field.widget.attrs.get('class', '')
+                field.widget.attrs['class'] = (
+                    f'{existing} {self.default_css_class}'.strip()
+                )
+                continue
             widget = field.widget
             existing = widget.attrs.get('class', '')
             widget.attrs['class'] = (
                 f'{existing} {self.default_css_class}'.strip()
             )
+
+    def clean_attachment(self):
+        """Ограничение размера вложения для защиты от злоупотреблений."""
+        f = self.cleaned_data.get('attachment')
+        if f:
+            max_bytes = 5 * 1024 * 1024
+            if f.size > max_bytes:
+                raise ValidationError(
+                    'Размер файла не должен превышать 5 МБ.',
+                )
+        return f
 
     def clean_message(self):
         """Проверяет, что сообщение содержит осмысленный текст."""

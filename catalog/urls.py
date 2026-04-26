@@ -10,6 +10,8 @@ from catalog.views import (
     CuratorDirectionsView,
     CuratorDirectionUpdateView,
     CuratorEventCreateView,
+    CuratorEventDeleteView,
+    CuratorEventUpdateView,
     CuratorEventsView,
     CuratorEventTypeDeleteView,
     CuratorEventTypesView,
@@ -85,6 +87,16 @@ urlpatterns = [
         'curator/events/new/',
         CuratorEventCreateView.as_view(),
         name='curator_event_create',
+    ),
+    path(
+        'curator/events/<int:pk>/edit/',
+        CuratorEventUpdateView.as_view(),
+        name='curator_event_edit',
+    ),
+    path(
+        'curator/events/<int:pk>/delete/',
+        CuratorEventDeleteView.as_view(),
+        name='curator_event_delete',
     ),
     path(
         'curator/registrations/',

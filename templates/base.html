@@ -35,6 +35,7 @@
 
             <nav class="site-nav" id="siteNav" aria-label="Основная навигация">
                 <ul class="site-nav__list">
+                    <li><a class="site-nav__link" href="{% url 'catalog:landing' %}">Главная</a></li>
                     <li><a class="site-nav__link" href="{% url 'catalog:events' %}">Каталог</a></li>
 
                     <li class="site-nav__group" data-nav-group>
@@ -120,11 +121,6 @@
                                 <a class="user-menu__item" href="{% url 'catalog:dashboard' %}" role="menuitem">
                                     <i class="bi bi-speedometer2"></i>
                                     Личный кабинет
-                                </a>
-                            {% else %}
-                                <a class="user-menu__item" href="{% url 'catalog:my_registrations' %}" role="menuitem">
-                                    <i class="bi bi-journal-check"></i>
-                                    Мои заявки
                                 </a>
                             {% endif %}
                             <a class="user-menu__item" href="{% url 'users:settings' %}" role="menuitem">
