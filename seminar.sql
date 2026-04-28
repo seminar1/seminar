@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 23, 2026 at 03:04 PM
+-- Generation Time: Apr 26, 2026 at 11:20 AM
 -- Server version: 8.0.42
 -- PHP Version: 8.0.1
 
@@ -326,15 +326,16 @@ CREATE TABLE `catalog_feedbackmessage` (
   `assigned_to_id` bigint DEFAULT NULL,
   `related_event_id` bigint DEFAULT NULL,
   `user_id` bigint DEFAULT NULL,
-  `topic_id` bigint DEFAULT NULL
+  `topic_id` bigint DEFAULT NULL,
+  `attachment` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `catalog_feedbackmessage`
 --
 
-INSERT INTO `catalog_feedbackmessage` (`id`, `full_name`, `email`, `phone`, `organization`, `subject`, `message`, `consent_to_processing`, `subscribe_to_news`, `ip_address`, `user_agent`, `referer`, `source`, `status`, `admin_note`, `answered_at`, `answer_text`, `created_at`, `updated_at`, `answered_by_id`, `assigned_to_id`, `related_event_id`, `user_id`, `topic_id`) VALUES
-(1, 'Федоров Виктор', 'viktor@gmail.com', '349857', 'Тестовая', 'Тестовое', 'Тестовое Тестовое Тестовое Тестовое', 1, 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', 'http://127.0.0.1:8000/feedback/', 'contact_form', 'answered', '', NULL, '', '2026-04-22 11:37:00.901725', '2026-04-22 11:48:07.843313', NULL, NULL, NULL, 4, 5);
+INSERT INTO `catalog_feedbackmessage` (`id`, `full_name`, `email`, `phone`, `organization`, `subject`, `message`, `consent_to_processing`, `subscribe_to_news`, `ip_address`, `user_agent`, `referer`, `source`, `status`, `admin_note`, `answered_at`, `answer_text`, `created_at`, `updated_at`, `answered_by_id`, `assigned_to_id`, `related_event_id`, `user_id`, `topic_id`, `attachment`) VALUES
+(1, 'Федоров Виктор', 'viktor@gmail.com', '349857', 'Тестовая', 'Тестовое', 'Тестовое Тестовое Тестовое Тестовое', 1, 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', 'http://127.0.0.1:8000/feedback/', 'contact_form', 'answered', '', NULL, '', '2026-04-22 11:37:00.901725', '2026-04-22 11:48:07.843313', NULL, NULL, NULL, 4, 5, NULL);
 
 -- --------------------------------------------------------
 
@@ -462,7 +463,8 @@ INSERT INTO `django_migrations` (`id`, `app`, `name`, `applied`) VALUES
 (23, 'catalog', '0004_remove_eventregistration_unique_event_user_registration_and_more', '2026-04-21 12:23:45.929182'),
 (24, 'catalog', '0005_feedbacktopic_eventreview_feedbackmessage', '2026-04-22 11:09:55.888914'),
 (25, 'catalog', '0006_seed_feedback_topics', '2026-04-22 11:16:10.960839'),
-(26, 'catalog', '0007_eventbookmark', '2026-04-23 13:59:52.534247');
+(26, 'catalog', '0007_eventbookmark', '2026-04-23 13:59:52.534247'),
+(27, 'catalog', '0008_feedbackmessage_attachment', '2026-04-26 11:11:54.346905');
 
 -- --------------------------------------------------------
 
@@ -481,7 +483,7 @@ CREATE TABLE `django_session` (
 --
 
 INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALUES
-('v1rtsd0cw81ovhvzu4iiw3mzmpcn2e14', '.eJxVjM0OwiAQhN-FsyHyU7Z49O4zkGUXpGogKe3J-O62SQ96nPm-mbcIuC4lrD3NYWJxEVacfruI9Ex1B_zAem-SWl3mKcpdkQft8tY4va6H-3dQsJdtDTA6rxWf0aOCiBBBs7OUKEcyftiic8DJAFnWI2eyRvOgs1LJqwji8wXmwDgQ:1wFtfO:zcR5bPgEB-krOPDXChf9WgIwucLc1qmnlt7KGL_gFHw', '2026-05-07 13:00:26.469272');
+('4m5ei9fl5pm8fcbgxy7imiiqn19nbis6', '.eJxVjDsOwjAQBe_iGllxFmwvJT1nsPbjkACypTipEHeHSCmgfTPzXibRuoxpbXlOk5qzAXP43ZjkkcsG9E7lVq3UsswT202xO232WjU_L7v7dzBSG781IniKHjIS9oOL4eR89OGY1ceBAgBzyNBDFFQU7tARKKtIL9JF9ub9AcvIN_A:1wGxPd:15VXWrGr86v6A73rkZWnrJDXMquz3YIF_SOgH4ZMRG8', '2026-05-10 11:12:33.410707');
 
 -- --------------------------------------------------------
 
@@ -516,7 +518,7 @@ CREATE TABLE `users_user` (
 
 INSERT INTO `users_user` (`id`, `password`, `last_login`, `is_superuser`, `username`, `first_name`, `last_name`, `email`, `is_staff`, `is_active`, `date_joined`, `role`, `patronymic`, `phone`, `organization`, `position`, `created_at`, `updated_at`) VALUES
 (1, 'pbkdf2_sha256$1200000$QrDK0Gb2txI5vK1rGp63ta$71yHE7m2yQQco0+/GSqOmj7DG5N5XRgHaNeGQtppmxQ=', '2026-04-23 10:47:47.095887', 1, 'admin', '', '', 'admin@gmail.com', 1, 1, '2026-04-21 10:32:22.113559', 'admin', '', '', '', '', '2026-04-21 10:32:23.167604', '2026-04-21 10:32:23.167604'),
-(3, 'pbkdf2_sha256$1200000$mFhnadfUOv56KqIWweMYfn$TgpeuspUxxD7NjNRlsAAqCIffLMqJ1g0YLHYluC3el4=', '2026-04-23 10:47:18.216008', 0, 'aleks', 'Александр', 'Васильевич', 'aleksandr@gmail.com', 0, 1, '2026-04-21 10:41:43.007817', 'curator', '', '', '', '', '2026-04-21 10:41:43.918388', '2026-04-21 10:43:39.314375'),
+(3, 'pbkdf2_sha256$1000000$oFrQhAhoabTWWV7TpgPT05$VHzx6ORmGdLpl7aMFFuVmhyAhwMx849+GgxzrA8Nucg=', '2026-04-26 11:12:33.362955', 0, 'aleks', 'Александр', 'Васильевич', 'aleksandr@gmail.com', 0, 1, '2026-04-21 10:41:43.007817', 'curator', '', '', '', '', '2026-04-21 10:41:43.918388', '2026-04-21 10:43:39.314375'),
 (4, 'pbkdf2_sha256$1200000$HoGTd7imvhLzSgoby9iTaZ$vRr8btc65hS1X/SYqQn05m7/U9I67xpxxxgYME4sQHE=', '2026-04-23 13:00:26.425987', 0, 'viktoor', 'Виктор', 'Федоров', 'viktor@gmail.com', 0, 1, '2026-04-21 12:20:57.981484', 'user', '', '', '', '', '2026-04-21 12:20:59.437708', '2026-04-21 12:20:59.437708');
 
 -- --------------------------------------------------------
@@ -787,7 +789,7 @@ ALTER TABLE `django_content_type`
 -- AUTO_INCREMENT for table `django_migrations`
 --
 ALTER TABLE `django_migrations`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `users_user`
