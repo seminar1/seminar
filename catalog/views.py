@@ -37,6 +37,7 @@ from catalog.models import (
     Event,
     EventBookmark,
     EventRegistration,
+    EventRegistrationStatusHistory,
     EventType,
     FeedbackMessage,
     FeedbackTopic,
@@ -355,7 +356,14 @@ class EventRegistrationCancelView(LoginRequiredMixin, View):
         was_confirmed = registration.status == EventRegistration.Status.CONFIRMED
 
         with transaction.atomic():
+            previous_status = registration.status
             registration.mark_cancelled(by=request.user)
+            EventRegistrationStatusHistory.objects.create(
+                registration=registration,
+                old_status=previous_status,
+                new_status=registration.status,
+                changed_by=request.user,
+            )
 
             if was_confirmed and event.seats_total > 0:
                 promoted = (
@@ -365,6 +373,7 @@ class EventRegistrationCancelView(LoginRequiredMixin, View):
                     .first()
                 )
                 if promoted is not None:
+                    promoted_previous_status = promoted.status
                     if event.requires_approval:
                         promoted.status = EventRegistration.Status.PENDING
                     else:
@@ -377,6 +386,12 @@ class EventRegistrationCancelView(LoginRequiredMixin, View):
                         'waitlist_position',
                         'updated_at',
                     ])
+                    EventRegistrationStatusHistory.objects.create(
+                        registration=promoted,
+                        old_status=promoted_previous_status,
+                        new_status=promoted.status,
+                        changed_by=request.user,
+                    )
 
         messages.success(
             request,
@@ -2770,6 +2785,9 @@ class CuratorRegistrationDetailView(CuratorRequiredMixin, View):
         return {
             'registration': registration,
             'status_form': status_form,
+            'status_history': registration.status_history.select_related(
+                'changed_by'
+            ),
             'active_tab': 'registrations',
         }
 
@@ -2828,6 +2846,13 @@ class CuratorRegistrationDetailView(CuratorRequiredMixin, View):
                 updated.waitlist_position = (last_position or 0) + 1
 
             updated.save()
+            if previous_status != new_status:
+                EventRegistrationStatusHistory.objects.create(
+                    registration=updated,
+                    old_status=previous_status,
+                    new_status=new_status,
+                    changed_by=request.user,
+                )
 
             messages.success(
                 request,

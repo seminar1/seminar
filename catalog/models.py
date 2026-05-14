@@ -652,6 +652,49 @@ class EventRegistration(models.Model):
             ])
 
 
+class EventRegistrationStatusHistory(models.Model):
+    """Audit record for every status change of an event registration."""
+
+    registration = models.ForeignKey(
+        EventRegistration,
+        verbose_name='Заявка',
+        on_delete=models.CASCADE,
+        related_name='status_history',
+    )
+    old_status = models.CharField(
+        'Предыдущий статус',
+        max_length=20,
+        choices=EventRegistration.Status.choices,
+        blank=True,
+    )
+    new_status = models.CharField(
+        'Новый статус',
+        max_length=20,
+        choices=EventRegistration.Status.choices,
+    )
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Кто изменил',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='event_registration_status_changes',
+    )
+    changed_at = models.DateTimeField('Время изменения', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'История статуса заявки'
+        verbose_name_plural = 'История статусов заявок'
+        ordering = ['-changed_at']
+        indexes = [
+            models.Index(fields=['registration', '-changed_at']),
+            models.Index(fields=['changed_by', '-changed_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.registration_id}: {self.old_status} -> {self.new_status}'
+
+
 class EventBookmark(models.Model):
     """Закладка «Избранное»: мероприятие, сохранённое пользователем."""
 

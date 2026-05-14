@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout, update_session_auth_hash
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
+from django.core.cache import cache
+from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
@@ -20,6 +22,9 @@ from users.mixins import AdminRequiredMixin
 
 User = get_user_model()
 
+REGISTER_RATE_LIMIT = 5
+REGISTER_RATE_WINDOW = 60
+
 
 class RegisterView(CreateView):
     """Страница регистрации нового пользователя.
@@ -33,11 +38,42 @@ class RegisterView(CreateView):
     template_name = 'users/register.html'
     success_url = reverse_lazy('catalog:landing')
 
+    def _get_client_ip(self):
+        forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
+        if forwarded_for:
+            return forwarded_for.split(',')[0].strip()
+        return self.request.META.get('REMOTE_ADDR', 'unknown')
+
+    def _is_rate_limited(self):
+        cache_key = f'register-rate:{self._get_client_ip()}'
+        if cache.add(cache_key, 1, timeout=REGISTER_RATE_WINDOW):
+            return False
+        try:
+            attempts = cache.incr(cache_key)
+        except ValueError:
+            cache.set(cache_key, 1, timeout=REGISTER_RATE_WINDOW)
+            attempts = 1
+        return attempts > REGISTER_RATE_LIMIT
+
     def dispatch(self, request, *args, **kwargs):
         """Авторизованных пользователей перенаправляет на главную."""
         if request.user.is_authenticated:
             return redirect('catalog:landing')
         return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if self._is_rate_limited():
+            form = self.get_form()
+            form.add_error(
+                None,
+                'Слишком много попыток регистрации. Подождите минуту и попробуйте снова.',
+            )
+            messages.error(
+                request,
+                'Слишком много попыток регистрации с вашего IP-адреса.',
+            )
+            return self.form_invalid(form)
+        return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
         """Сохраняет пользователя и сразу же авторизует его."""
@@ -232,7 +268,37 @@ class AdminUserRoleUpdateView(AdminRequiredMixin, View):
 
         form = UserRoleForm(request.POST, instance=target)
         if form.is_valid():
-            form.save()
+            with transaction.atomic():
+                locked_target = User.objects.select_for_update().get(
+                    pk=target.pk
+                )
+                form = UserRoleForm(request.POST, instance=locked_target)
+                form.is_valid()
+                new_role = form.cleaned_data['role']
+                target_is_admin = (
+                    locked_target.role == User.Role.ADMIN
+                    or locked_target.is_superuser
+                )
+                removes_admin_role = new_role != User.Role.ADMIN
+                other_admins_exist = (
+                    User.objects
+                    .select_for_update()
+                    .filter(Q(role=User.Role.ADMIN) | Q(is_superuser=True))
+                    .exclude(pk=locked_target.pk)
+                    .exists()
+                )
+                if (
+                    target_is_admin
+                    and removes_admin_role
+                    and not other_admins_exist
+                ):
+                    messages.error(
+                        request,
+                        'Нельзя снять права администратора с единственного администратора системы.',
+                    )
+                    return HttpResponseRedirect(redirect_url)
+                form.save()
+            target.refresh_from_db()
             messages.success(
                 request,
                 f'Роль пользователя {target.username} обновлена: '

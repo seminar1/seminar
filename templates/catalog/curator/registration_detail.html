@@ -253,6 +253,25 @@
                             {% endif %}
                         {% endif %}
                     </dl>
+                    {% if status_history %}
+                        <h4 class="feedback-detail-side__title">Аудит статусов</h4>
+                        <dl class="feedback-detail-side__list">
+                            {% for item in status_history %}
+                                <div>
+                                    <dt>{{ item.changed_at|date:"d.m.Y H:i" }}</dt>
+                                    <dd>
+                                        {{ item.get_old_status_display|default:"—" }}
+                                        →
+                                        {{ item.get_new_status_display }}
+                                        {% if item.changed_by %}
+                                            <br>
+                                            {{ item.changed_by.get_full_name|default:item.changed_by.username }}
+                                        {% endif %}
+                                    </dd>
+                                </div>
+                            {% endfor %}
+                        </dl>
+                    {% endif %}
                 </article>
             </aside>
         </div>

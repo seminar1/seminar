@@ -73,7 +73,7 @@ class RegisterForm(StyledFormMixin, UserCreationForm):
         super().__init__(*args, **kwargs)
         self.fields['username'].help_text = ''
         self.fields['password1'].help_text = (
-            'Минимум 8 символов, не только цифры.'
+            'Минимум 12 символов: строчные и заглавные буквы, цифры, специальный символ; без типовых словарных паролей.'
         )
         self.fields['password2'].help_text = ''
 
@@ -195,7 +195,7 @@ class UserPasswordChangeForm(StyledFormMixin, DjangoPasswordChangeForm):
             'autocomplete': 'new-password',
         })
         self.fields['new_password1'].help_text = (
-            'Минимум 8 символов, не только цифры, не похож на логин или e-mail.'
+            'Минимум 12 символов: строчные и заглавные буквы, цифры, специальный символ; без типовых словарных паролей.'
         )
         self.fields['new_password2'].help_text = ''
 
