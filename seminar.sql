@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 26, 2026 at 11:20 AM
+-- Generation Time: May 14, 2026 at 07:42 PM
 -- Server version: 8.0.42
 -- PHP Version: 8.0.1
 
@@ -117,7 +117,11 @@ INSERT INTO `auth_permission` (`id`, `name`, `content_type_id`, `codename`) VALU
 (53, 'Can add Закладка (избранное)', 14, 'add_eventbookmark'),
 (54, 'Can change Закладка (избранное)', 14, 'change_eventbookmark'),
 (55, 'Can delete Закладка (избранное)', 14, 'delete_eventbookmark'),
-(56, 'Can view Закладка (избранное)', 14, 'view_eventbookmark');
+(56, 'Can view Закладка (избранное)', 14, 'view_eventbookmark'),
+(57, 'Can add История статуса заявки', 15, 'add_eventregistrationstatushistory'),
+(58, 'Can change История статуса заявки', 15, 'change_eventregistrationstatushistory'),
+(59, 'Can delete История статуса заявки', 15, 'delete_eventregistrationstatushistory'),
+(60, 'Can view История статуса заявки', 15, 'view_eventregistrationstatushistory');
 
 -- --------------------------------------------------------
 
@@ -242,6 +246,21 @@ CREATE TABLE `catalog_eventregistration` (
 
 INSERT INTO `catalog_eventregistration` (`id`, `status`, `note`, `created_at`, `updated_at`, `event_id`, `user_id`, `cancellation_reason`, `cancelled_at`, `cancelled_by_id`, `confirmed_at`, `email`, `full_name`, `organization`, `phone`, `position`, `source`, `waitlist_position`) VALUES
 (1, 'confirmed', '', '2026-04-22 11:59:43.649481', '2026-04-22 11:59:43.649481', 2, 4, '', NULL, NULL, '2026-04-22 11:59:43.648474', 'viktor@gmail.com', 'Федоров Виктор', 'Управление Бизнесом', '324234', 'Студент', 'self', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `catalog_eventregistrationstatushistory`
+--
+
+CREATE TABLE `catalog_eventregistrationstatushistory` (
+  `id` bigint NOT NULL,
+  `old_status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `new_status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `changed_at` datetime(6) NOT NULL,
+  `changed_by_id` bigint DEFAULT NULL,
+  `registration_id` bigint NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -412,6 +431,7 @@ INSERT INTO `django_content_type` (`id`, `app_label`, `model`) VALUES
 (8, 'catalog', 'event'),
 (14, 'catalog', 'eventbookmark'),
 (9, 'catalog', 'eventregistration'),
+(15, 'catalog', 'eventregistrationstatushistory'),
 (11, 'catalog', 'eventreview'),
 (10, 'catalog', 'eventtype'),
 (12, 'catalog', 'feedbackmessage'),
@@ -464,7 +484,8 @@ INSERT INTO `django_migrations` (`id`, `app`, `name`, `applied`) VALUES
 (24, 'catalog', '0005_feedbacktopic_eventreview_feedbackmessage', '2026-04-22 11:09:55.888914'),
 (25, 'catalog', '0006_seed_feedback_topics', '2026-04-22 11:16:10.960839'),
 (26, 'catalog', '0007_eventbookmark', '2026-04-23 13:59:52.534247'),
-(27, 'catalog', '0008_feedbackmessage_attachment', '2026-04-26 11:11:54.346905');
+(27, 'catalog', '0008_feedbackmessage_attachment', '2026-04-26 11:11:54.346905'),
+(28, 'catalog', '0009_eventregistrationstatushistory', '2026-05-14 19:41:51.634779');
 
 -- --------------------------------------------------------
 
@@ -483,7 +504,9 @@ CREATE TABLE `django_session` (
 --
 
 INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALUES
-('4m5ei9fl5pm8fcbgxy7imiiqn19nbis6', '.eJxVjDsOwjAQBe_iGllxFmwvJT1nsPbjkACypTipEHeHSCmgfTPzXibRuoxpbXlOk5qzAXP43ZjkkcsG9E7lVq3UsswT202xO232WjU_L7v7dzBSG781IniKHjIS9oOL4eR89OGY1ceBAgBzyNBDFFQU7tARKKtIL9JF9ub9AcvIN_A:1wGxPd:15VXWrGr86v6A73rkZWnrJDXMquz3YIF_SOgH4ZMRG8', '2026-05-10 11:12:33.410707');
+('4m5ei9fl5pm8fcbgxy7imiiqn19nbis6', '.eJxVjDsOwjAQBe_iGllxFmwvJT1nsPbjkACypTipEHeHSCmgfTPzXibRuoxpbXlOk5qzAXP43ZjkkcsG9E7lVq3UsswT202xO232WjU_L7v7dzBSG781IniKHjIS9oOL4eR89OGY1ceBAgBzyNBDFFQU7tARKKtIL9JF9ub9AcvIN_A:1wGxPd:15VXWrGr86v6A73rkZWnrJDXMquz3YIF_SOgH4ZMRG8', '2026-05-10 11:12:33.410707'),
+('c2sedrqyt235zbpm4cwp8qi92pwxx6qt', '.eJxVjDsOwjAQBe_iGllxFmwvJT1nsPbjkACypTipEHeHSCmgfTPzXibRuoxpbXlOk5qzAXP43ZjkkcsG9E7lVq3UsswT202xO232WjU_L7v7dzBSG781IniKHjIS9oOL4eR89OGY1ceBAgBzyNBDFFQU7tARKKtIL9JF9ub9AcvIN_A:1wHR57:pc9oomiFnjxI8FChmLOCGPGLaKRqZUCSiiqpklHi7-w', '2026-05-11 18:53:21.508982'),
+('lnbixj22ioc2x3b7rv7u3jhn94m2rziu', '.eJxVjDsOwjAQBe_iGlneOP5R0nMGa727wgHkSHFSIe4OkVJA-2bmvVTGba1567LkidVZWXX63QrSQ9oO-I7tNmua27pMRe-KPmjX15nleTncv4OKvX5rspQcWy8WDOAAYzGBTbRQUiAIEH0EQfDOsSRLTOKidwCDGQNAEPX-AL-ZNqM:1wNbuk:2G0cz1paCB4AFyJROjac1Bc93UH3lhBcV74l6D-Nd80', '2026-05-28 19:40:10.380866');
 
 -- --------------------------------------------------------
 
@@ -517,8 +540,8 @@ CREATE TABLE `users_user` (
 --
 
 INSERT INTO `users_user` (`id`, `password`, `last_login`, `is_superuser`, `username`, `first_name`, `last_name`, `email`, `is_staff`, `is_active`, `date_joined`, `role`, `patronymic`, `phone`, `organization`, `position`, `created_at`, `updated_at`) VALUES
-(1, 'pbkdf2_sha256$1200000$QrDK0Gb2txI5vK1rGp63ta$71yHE7m2yQQco0+/GSqOmj7DG5N5XRgHaNeGQtppmxQ=', '2026-04-23 10:47:47.095887', 1, 'admin', '', '', 'admin@gmail.com', 1, 1, '2026-04-21 10:32:22.113559', 'admin', '', '', '', '', '2026-04-21 10:32:23.167604', '2026-04-21 10:32:23.167604'),
-(3, 'pbkdf2_sha256$1000000$oFrQhAhoabTWWV7TpgPT05$VHzx6ORmGdLpl7aMFFuVmhyAhwMx849+GgxzrA8Nucg=', '2026-04-26 11:12:33.362955', 0, 'aleks', 'Александр', 'Васильевич', 'aleksandr@gmail.com', 0, 1, '2026-04-21 10:41:43.007817', 'curator', '', '', '', '', '2026-04-21 10:41:43.918388', '2026-04-21 10:43:39.314375'),
+(1, 'pbkdf2_sha256$1200000$QrDK0Gb2txI5vK1rGp63ta$71yHE7m2yQQco0+/GSqOmj7DG5N5XRgHaNeGQtppmxQ=', '2026-05-14 19:39:42.916673', 1, 'admin', '', '', 'admin@gmail.com', 1, 1, '2026-04-21 10:32:22.113559', 'admin', '', '', '', '', '2026-04-21 10:32:23.167604', '2026-04-21 10:32:23.167604'),
+(3, 'pbkdf2_sha256$1200000$IW4OwpGHfgvD4guELYTC6g$5PM9u1NN1gPzOFduZlMX0c6bBNqZWkZ0DpmzFiP+Etc=', '2026-05-14 19:40:10.341544', 0, 'aleks', 'Александр', 'Васильевич', 'aleksandr@gmail.com', 0, 1, '2026-04-21 10:41:43.007817', 'curator', '', '', '', '', '2026-04-21 10:41:43.918388', '2026-04-21 10:43:39.314375'),
 (4, 'pbkdf2_sha256$1200000$HoGTd7imvhLzSgoby9iTaZ$vRr8btc65hS1X/SYqQn05m7/U9I67xpxxxgYME4sQHE=', '2026-04-23 13:00:26.425987', 0, 'viktoor', 'Виктор', 'Федоров', 'viktor@gmail.com', 0, 1, '2026-04-21 12:20:57.981484', 'user', '', '', '', '', '2026-04-21 12:20:59.437708', '2026-04-21 12:20:59.437708');
 
 -- --------------------------------------------------------
@@ -610,6 +633,14 @@ ALTER TABLE `catalog_eventregistration`
   ADD KEY `catalog_eventregistr_cancelled_by_id_d28bc251_fk_users_use` (`cancelled_by_id`),
   ADD KEY `catalog_eve_user_id_4cffe7_idx` (`user_id`,`status`),
   ADD KEY `catalog_eve_event_i_5aee9b_idx` (`event_id`,`waitlist_position`);
+
+--
+-- Indexes for table `catalog_eventregistrationstatushistory`
+--
+ALTER TABLE `catalog_eventregistrationstatushistory`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `catalog_eve_registr_e35c2a_idx` (`registration_id`,`changed_at` DESC),
+  ADD KEY `catalog_eve_changed_db5991_idx` (`changed_by_id`,`changed_at` DESC);
 
 --
 -- Indexes for table `catalog_eventreview`
@@ -723,7 +754,7 @@ ALTER TABLE `auth_group_permissions`
 -- AUTO_INCREMENT for table `auth_permission`
 --
 ALTER TABLE `auth_permission`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT for table `catalog_direction`
@@ -747,6 +778,12 @@ ALTER TABLE `catalog_eventbookmark`
 -- AUTO_INCREMENT for table `catalog_eventregistration`
 --
 ALTER TABLE `catalog_eventregistration`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `catalog_eventregistrationstatushistory`
+--
+ALTER TABLE `catalog_eventregistrationstatushistory`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
 
 --
@@ -783,13 +820,13 @@ ALTER TABLE `django_admin_log`
 -- AUTO_INCREMENT for table `django_content_type`
 --
 ALTER TABLE `django_content_type`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `django_migrations`
 --
 ALTER TABLE `django_migrations`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `users_user`
@@ -848,6 +885,13 @@ ALTER TABLE `catalog_eventregistration`
   ADD CONSTRAINT `catalog_eventregistr_cancelled_by_id_d28bc251_fk_users_use` FOREIGN KEY (`cancelled_by_id`) REFERENCES `users_user` (`id`),
   ADD CONSTRAINT `catalog_eventregistration_event_id_802a2967_fk_catalog_event_id` FOREIGN KEY (`event_id`) REFERENCES `catalog_event` (`id`),
   ADD CONSTRAINT `catalog_eventregistration_user_id_a76a5d0c_fk_users_user_id` FOREIGN KEY (`user_id`) REFERENCES `users_user` (`id`);
+
+--
+-- Constraints for table `catalog_eventregistrationstatushistory`
+--
+ALTER TABLE `catalog_eventregistrationstatushistory`
+  ADD CONSTRAINT `catalog_eventregistr_changed_by_id_814dcf4a_fk_users_use` FOREIGN KEY (`changed_by_id`) REFERENCES `users_user` (`id`),
+  ADD CONSTRAINT `catalog_eventregistr_registration_id_580f0ef6_fk_catalog_e` FOREIGN KEY (`registration_id`) REFERENCES `catalog_eventregistration` (`id`);
 
 --
 -- Constraints for table `catalog_eventreview`
